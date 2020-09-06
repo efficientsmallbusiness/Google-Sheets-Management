@@ -1,0 +1,858 @@
+<div class="container">
+
+<h1>BATCH</h1>
+
+  <div class="row hline-bottom">
+        <div class="col-12">
+              <div class="row clearAlert input-group">
+                    <div class="col-12 col-md-6 input-group-prepend">
+                         <span class="input-group-text bg-info text-light" id="batchSelector-label">Select</span>
+                    
+                          <select class="selectpicker" data-live-search-placeholder="Search" id="batchSelector" title="Please select..." data-live-search="true" data-width="100%">
+                              
+                         </select>
+                          <div class="text-center fileLoadingSpinner">
+                              <div class="spinner-grow text-info" role="status">
+                                <span class="sr-only">Loading...</span>
+                              </div>
+                        </div>  
+                        
+                    </div>
+               </div>
+        </div>
+  </div>
+    
+    
+    
+  <div class="col-lg-12" id="alertUser"></div>
+
+  
+ <div class="loadTable"> <!-- HIDE! - EVERYTHING WITHIN THIS DIV IS HIDDEN UNTIL A BATCH IS SELECTED -->
+  
+ <!-- TABS HEADER --> 
+ <nav>
+  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <a class="nav-item nav-link active" id="nav-general-tab" data-toggle="tab" href="#nav-general" role="tab" aria-controls="nav-general" aria-selected="true">General</a>
+    <a class="nav-item nav-link" id="nav-fermDetails-tab" data-toggle="tab" href="#nav-fermDetails" role="tab" aria-controls="nav-fermDetails" aria-selected="false">Fermentation</a>
+    <a class="nav-item nav-link" id="nav-blendDetails-tab" data-toggle="tab" href="#nav-blendDetails" role="tab" aria-controls="nav-blendDetails" aria-selected="false">Blending</a>
+    <a class="nav-item nav-link" id="nav-additional-tab" data-toggle="tab" href="#nav-additional" role="tab" aria-controls="nav-additional" aria-selected="false">Additional</a>
+    
+    <button type="button" class="btn btn-primary float-right" id="batchSave">Save</button>
+  </div>
+  
+  
+</nav>
+<div class="tab-content" id="nav-tabContent">
+
+
+<!-- OPEN GENERAL TAB 1 -->
+  <div class="tab-pane fade show active" id="nav-general" role="tabpanel" aria-labelledby="nav-general-tab">
+ 
+ 
+      <div class="row add-top-margin"> <!-- START ROW -->
+      
+        <div class="col-md-12">
+            <div class="row"><!-- START NESTED ROW -->
+            
+                <div class="col-4 col-md-2">
+                    <div class="form-group">
+                        <label for="batchType">Batch type</label>
+                        <select id="batchType" class="form-control save-field selectpicker batch-input" title="Please select..." name="batchType">
+                          <option data-vessel-id="4">BATCH</option>
+                          <option data-vessel-id="5">FERM</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-4 col-md-2">
+                      <div class="form-group">
+                          <label for="alcType">Alc. Type</label>
+                          <input class="form-control save-field recipe-input" type="text" name="alcType" id="alcType" disabled>
+                      </div>
+                  </div>
+                <div class="col-4 col-md-2">
+                    <div class="form-group">
+                        <label for="batchStatus">Status</label>
+                        <select id="batchStatus" title="Please select..." class="form-control save-field selectpicker batch-input" name="batchStatus">
+                          <option>Scheduled</option>
+                          <option>In-Progress</option>
+                          <option>Aging</option>
+                          <option>Complete</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-4 col-md-2">
+                    <div class="form-group">
+                        <label for="batchVessel">Vessel</label>
+                        <select id="batchVessel" class="form-control save-field selectpicker batch-input" title="Please select..." name="batchVessel">
+                          <option selected="">None</option>
+                          <option data-vessel-id="1">FV2</option>
+                          <option data-vessel-id="2">MX1</option>
+                          <option data-vessel-id="3">CB1</option>
+                          <option data-vessel-id="4">CB2</option>
+                          <option data-vessel-id="5">FV1</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-4 col-md-2">
+                    <div class="form-group">
+                        <label for="initialGallons">Initial gallons</label>
+                        <input class="form-control save-field batch-input" type="number" step="0.01" min="0" name="initialGallons" id="initialGallons" placeholder="(gal)" required=""  >
+                    </div>
+                </div>
+                
+            </div><!-- END NESTED ROW -->
+          </div>
+          
+          <div class="col-md-12">
+              <div class="row"><!-- START NESTED ROW -->
+              
+                  <div class="col-6 col-md-3">
+                      <div class="form-group">
+                          <label for="batchStart">Batch start</label>
+                          <input class="form-control save-field batch-input" type="date" name="batchStart" id="batchStart" required=""  >
+                      </div>
+                  </div>
+                  <div class="col-6 col-md-3">
+                      <div class="form-group">
+                          <label for="projectedFinish">Projected finish</label>
+                          <input class="form-control save-field batch-input" type="date" name="projectedFinish" id="projectedFinish" required=""  >
+                      </div>
+                  </div>
+                  <div class="col-2">
+                          <label for="recipeId">Recipe</label>
+                          <a href="#" class="form-control save-field recipe-input" type="link" name="recipeId" id="recipeId" required="" disabled >Recipe</a>
+                   
+                  </div>
+               
+
+                
+              </div><!-- END NESTED ROW -->
+          </div>
+          
+          
+     </div><!-- END ROW -->
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  <!-- *********************************** STARTER DETAILS ************************************* -->
+        
+    
+            
+         <div class="col-lg-12">
+             <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input slider" id="showStarterDetails">
+                <label class="custom-control-label" for="showStarterDetails">Show batch-start details</label>
+            </div>
+        </div>
+        
+       
+    <div id="starterDetails">
+        
+        <h3>STARTER DETAILS</h3>
+        <p>How much honey, water, yeast, and goferm? What are the initial nutrient additions? Do I need to add enzymes?</p>
+            
+        <div class="row add-top-margin"> <!-- START ROW -->
+            
+            <div class="col-md-12">
+                <div class="row"><!-- START NESTED ROW -->
+                
+                    <div class="col-4 col-md-2">
+                        <div class="form-group">
+                            <label for="targetStartingGrav">Target starting gravity</label>
+                            <input class="form-control save-field recipe-input" type="text" name="targetStartingGrav" id="targetStartingGrav" disabled>
+                        </div>
+                    </div>
+                    <div class="col-4 col-md-2">
+                        <div class="form-group">
+                            <label for="targetFinalGrav">Target final gravity</label>
+                            <input class="form-control save-field recipe-input" type="text" name="targetFinalGrav" id="targetFinalGrav" disabled>
+                        </div>
+                    </div>
+                    <div class="col-4 col-md-2">
+                        <div class="form-group">
+                            <label for="targetFinalAbv">Target final abv</label>
+                            <input class="form-control save-field recipe-input" type="text" name="targetFinalAbv" id="targetFinalAbv" disabled>
+                        </div>
+                    </div>
+                    
+                </div><!-- END NESTED ROW -->
+                <div class="row"><!-- START NESTED ROW -->
+                
+                  <div class="col-12">
+                      <div class="form-group">
+                        <label for="batchNotes">Start notes</label>
+                        <textarea class="form-control save-field batch-input"  id="batchNotes">Remember to do these things.</textarea>
+                      </div>
+                  </div>
+                  
+                </div><!-- END NESTED ROW -->
+            </div>   
+     </div>
+     
+    </div>
+     <!-- *********************************** END STARTER DETAILS ************************************* -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="row add-top-margin"> <!-- Open table row -->
+    
+      <div class="col-lg-6"> <!-- INGREDIENT TABLE -->
+        
+          <div class="tableHeader addBtnDiv" style="background-color:#79897c;">
+              <span style="padding-left:60px;">Ingredients</span>
+              <button type="button" id="batch-ingrBtn" class="float-right btn btn-light newRow">ADD</button>
+              <button class="float-right btn btn-light loadingBtn newRow" id="batch-ingrBtn-loading" type="button" disabled>
+                  <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+                  <span class="sr-only">Loading...</span>
+              </button>
+          </div>
+        <table id="batch-ingredientTable"
+        data-height="200"
+        data-toggle="table"
+        class="table-borderless">
+            <thead>
+                <tr>
+                    <th data-field="ingredient" class="wideCol ingredientSelect" data-sortable="true">Ingredient</th>
+                    <th data-field="qty" class="narrowCol numberInput">Qty</th>
+                    <th data-field="uom" class="noEdit narrowCol">UoM</th>
+                    <th data-field="contactTime" class="narrowCol textInput">Time</th>
+                    <!-- Hidden columns -->
+                    <!-- These are used for storing row data -->
+                    <th data-field="id" data-visible="false" class="noEdit"></th>
+                    <th data-field="batchId" data-visible="false" class="noEdit"></th>
+                    <th data-field="type" data-visible="false" class="noEdit"></th>
+                    <th data-field="created" data-visible="false" class="noEdit"></th>
+                    <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" class="noEdit iconCol"></th>
+                </tr>
+            </thead>
+        </table>
+        
+        <div class="hline-bottom"></div>
+      
+      </div><!-- CLOSE INGREDIENT TABLE -->
+      
+      <br><br>
+      
+      <div class="col-lg-6"><!-- ADDITIVE TABLE -->
+      
+          
+          <div class="tableHeader addBtnDiv" style="background-color:#897c79;">
+            <span style="padding-left:60px;">Additives</span>
+            <button type="button" id="batch-addtvBtn" class="float-right btn btn-light newRow">ADD</button>
+            <button class="float-right btn btn-light loadingBtn newRow" id="batch-addtvBtn-loading" type="button" disabled>
+                <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+                <span class="sr-only">Loading...</span>
+            </button>
+          </div>
+          
+          <table id="batch-additiveTable"
+          data-height="200"
+          data-toggle="table"
+          class="table-borderless">
+            <thead>
+              <tr>
+                <th data-field="ingredient" class="wideCol ingredientSelect" data-sortable="true">Additive</th>
+              <th data-field="qty" class="narrowCol numberInput">Qty</th>
+              <th data-field="uom" class="noEdit narrowCol">UoM</th>
+              <th data-field="contactTime" class="narrowCol textInput">Time</th>
+              <!-- Hidden columns -->
+              <!-- These are used for storing row data -->
+              <th data-field="id" data-visible="false" class="noEdit"></th>
+              <th data-field="batch" data-visible="false" class="noEdit"></th>
+              <th data-field="type" data-visible="false" class="noEdit"></th>
+              <th data-field="created" data-visible="false" class="noEdit"></th>
+              <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" class="noEdit iconCol"></th>
+              </tr>
+            </thead>
+          </table>
+          
+        <div class="hline-bottom"></div>
+      
+      </div><!-- CLOSE ADDITIVE TABLE -->
+      
+      <div class="col-lg-12"><!-- LOSS TABLE -->
+        
+          <div class="tableHeader addBtnDiv" style="background-color:#7c7989;">
+            <span style="padding-left:60px;">Loss</span>
+            <button type="button" id="batch-lossBtn" class="float-right btn btn-light newRow">ADD</button>
+            <button class="float-right btn btn-light loadingBtn newRow" id="batch-lossBtn-loading" type="button" disabled>
+                <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+                <span class="sr-only">Loading...</span>
+            </button>
+          </div>
+        
+          <table id="batch-lossTable"
+          data-height="200"
+          data-toggle="table"
+          class="table-borderless">
+            <thead>
+              <tr>
+                  <th data-field="lossType" style="width:100px;" class="lossSelect" data-sortable="true">Type</th>
+                  <th data-field="qty" class="narrowCol numberInput">Qty (gal)</th>
+                  <th data-field="reason" class="textInput">Reason</th>
+                  <th data-field="lossDate" class="dateInput">Date</th>
+                  <!-- Hidden columns -->
+                  <!-- These are used for storing row data -->
+                  <th data-field="id" data-visible="false" class="noEdit"></th>
+                  <th data-field="batch" data-visible="false" class="noEdit"></th>
+                  <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" class="noEdit iconCol"></th>
+              </tr>
+            </thead>
+          </table>
+          
+        <div class="hline-bottom"></div>
+      
+      </div><!-- CLOSE ADDITIVE TABLE -->
+      
+    </div><!-- Close table row -->
+  
+  
+    <div class="row add-top-margin"> <!-- START ROW -->
+        
+        <div class="col-md-12">
+            <div class="row"><!-- START NESTED ROW -->
+            
+                <div class="col-2 col-md-1">
+                    <div class="form-group">
+                        <label for="filtered">Filtered</label>
+                        <input class="form-control save-field" type="checkbox" name="filtered" id="filtered" required="">
+                    </div>
+                </div>
+                <div class="col-3 col-md-2">
+                    <div class="form-group">
+                        <label for="porosity">Porosity</label>
+                        <input class="form-control save-field" type="text" name="porosity" id="porosity" required="">
+                    </div>
+                </div>
+                <div class="col-2 col-md-1">
+                    <div class="form-group">
+                        <label for="carbonated">Carb.</label>
+                        <input class="form-control save-field recipe-input" type="checkbox" name="carbonated" id="carbonated">
+                    </div>
+                </div>
+                <div class="col-4 col-md-2">
+                    <div class="form-group">
+                        <label for="finalAbv">Final ABV%</label>
+                        <input class="form-control save-field batch-input" type="number" step=".001" min="0" name="finalAbv" id="finalAbv" required="">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="form-group">
+                        <label for="batchFinish">Batch finish</label>
+                        <input class="form-control save-field batch-input" type="date" name="batchFinish" id="batchFinish"  required="">
+                    </div>
+                </div>
+                
+            </div><!-- END NESTED ROW -->
+        </div>        
+        
+        <div class="col-md-12">
+            <div class="row"><!-- START NESTED ROW -->
+            
+                <div class="col-6 col-md-3">
+                    <div class="form-group">
+                        <label for="finishedGallons">Finished gallons</label>
+                        <input class="form-control save-field batch-input" name="finishedGallons" id="finishedGallons" value="Calculated (initial -loss)" required="" disabled>
+                    </div>
+                </div>
+                <div class="col-6 col-md-5">
+                    <div class="form-group">
+                        <label for="remainingGallons">Remaining gallons</label>
+                        <input class="form-control save-field batch-input" name="remainingGallons" id="remainingGallons" value="Calculated (finished -transfers -packaging)" required="" disabled>
+                    </div>
+                </div>
+                
+            </div><!-- END NESTED ROW -->
+        </div>
+        
+        
+        <div class="col-md-12">
+              <div class="row"><!-- START NESTED ROW -->
+              
+                <div class="col-12">
+                    <div class="form-group">
+                      <label for="batchNotes">Notes</label>
+                      <textarea class="form-control save-field batch-input"  id="batchNotes">This batch is going well</textarea>
+                    </div>
+                </div>
+                
+              </div><!-- END NESTED ROW -->
+          </div>
+        
+    </div><!-- CLOSE ROW -->
+    
+    
+    
+
+</div><!-- CLOSE GENERAL TAB -->
+
+  <div class="tab-pane fade" id="nav-additional" role="tabpanel" aria-labelledby="nav-additional-tab"><!-- OPEN ADDITIONAL TAB -->
+  
+       <div class="add-top-margin"></div>
+       <div class="row"><!-- START ROW -->
+       
+          <div class="col-md-12">
+              <div class="row"><!-- START NESTED ROW -->
+              
+                <div class="col-12 col-md-5">
+                    <div class="form-group">
+                        <label for="recipeName">Batch name</label>
+                        <input class="form-control save-field recipe-input" type="text" name="recipeName" id="recipeName" disabled>
+                    </div>
+                </div>
+                <div class="col-12 col-md-7">
+                    <div class="form-group">
+                        <label for="shortDescription">Short description</label>
+                        <input class="form-control save-field recipe-input" type="text" name="shortDescription" id="shortDescription" disabled>
+                    </div>
+                </div>
+               
+                
+              </div><!-- END NESTED ROW -->
+          </div>
+          
+          <div class="col-md-12">
+              <div class="row"><!-- START NESTED ROW -->
+              
+                <div class="col-6 col-md-4">
+                    <div class="form-group">
+                        <label for="ttbStatus">TTB Status</label>
+                        <input class="form-control save-field recipe-input" type="text" name="ttbStatus" id="ttbStatus">
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="form-group">
+                        <label for="cola">COLA</label>
+                        <input class="form-control save-field recipe-input" type="text" name="cola" id="cola">
+                    </div>
+                </div>
+                
+                
+              </div><!-- END NESTED ROW -->
+          </div>
+          
+          <div class="col-md-12">
+              <div class="row"><!-- START NESTED ROW -->
+              
+                <div class="col-6">
+                    <div class="form-group">
+                      <label for="notableDetails">Notable details</label>
+                      <textarea class="form-control save-field recipe-input"  id="notableDetails">It was aged for 900 years!</textarea>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="form-group">
+                      <label for="awards">Awards</label>
+                      <textarea class="form-control save-field recipe-input"  id="awards">1 Gold Star!</textarea>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="form-group">
+                        <label for="recordCreated">Created on</label>
+                        <input class="form-control save-field" type="date" name="recordCreated" id="recordCreated" value="2020-01-11" required=""   disabled>
+                    </div>
+                </div>
+                
+              </div><!-- END NESTED ROW -->
+          </div>
+  
+      </div><!-- END ROW -->
+        
+     
+  
+  
+   <a href="#!" onClick="alert('Are you sure you want to archive this batch?');">Archive</a>
+  
+  </div><!-- CLOSE ADDITIONAL TAB -->
+  
+  <div class="tab-pane fade" id="nav-fermDetails" role="tabpanel" aria-labelledby="nav-fermDetails-tab"><!-- OPEN FERMENTATION TAB -->
+
+        
+            <div class="row add-top-margin"> <!-- OPEN ROW -->
+                 <div class="col-md-12">
+                 
+                      <div class="row"><!-- START NESTED ROW -->
+                          
+                          <div class="col-4 col-md-2">
+                              <div class="form-group">
+                                  <label for="og">O.G.</label>
+                                  <input class="form-control save-field batch-input" type="number" min="0" step="0.001" name="og" id="og" required=""  >
+                              </div>
+                          </div>
+                          <div class="col-4 col-md-2">
+                              <div class="form-group">
+                                  <label for="alcPotential">Alc. Potential</label>
+                                  <input class="form-control save-field batch-input" type="number" min="0" step="0.001" name="alcPotential" id="alcPotential"  required=""  >
+                              </div>
+                          </div>
+                          <div class="col-4 col-md-2">
+                              <div class="form-group">
+                                  <label for="stopO2">Stop O2 @</label>
+                                  <input class="form-control save-field batch-input" type="number" min="0" step="0.001" name="stopO2" id="stopO2" required=""  >
+                              </div>
+                          </div>
+                          <div class="col-4 col-md-2">
+                              <div class="form-group">
+                                  <label for="stopManagement">Stop Mgmt @</label>
+                                  <input class="form-control save-field batch-input" type="number" min="0" step="0.001" name="stopManagement" id="stopManagement" required=""  >
+                              </div>
+                          </div>
+                          <div class="col-4 col-md-2">
+                              <div class="form-group">
+                                  <label for="stopSg">Stop @ SG</label>
+                                  <input class="form-control save-field batch-input" type="number" min="0" step="0.001" name="stopSg" id="stopSg" required=""  >
+                              </div>
+                          </div>
+                          <div class="col-4 col-md-2">
+                              <div class="form-group">
+                                  <label for="stopAbv">Stop @ Abv</label>
+                                  <input class="form-control save-field batch-input" type="number" min="0" step="0.001" name="stopAbv" id="stopAbv" required=""  >
+                              </div>
+                          </div>
+                          
+                      </div><!-- CLOSE NESTED ROW -->
+                      
+                      <div class="row"><!-- START NESTED ROW -->
+                      
+                          <div class="col-12"><!-- FERMENTING TABLE -->
+                              <div class="tableHeader addBtnDiv" style="background-color:#897c79;">
+                                  <span style="padding-left:60px;">Ferm log</span>
+                                  <button type="button" id="batch-fermentBtn" class="float-right btn btn-light newRow">ADD</button>
+                                  <button class="float-right btn btn-light loadingBtn newRow" id="batch-fermentBtn-loading" type="button" disabled>
+                                      <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+                                      <span class="sr-only">Loading...</span>
+                                  </button>
+                              </div>
+                              
+                              <table id="batch-fermentTable"
+                              data-height="200"
+                              data-toggle="table"
+                              data-show-columns="true"
+                              class="table-sm table-borderless">
+                                <thead>
+                                    <tr>
+                                        <th data-field="date" data-sortable="true" data-formatter="dateFormatter">Date</th>
+                                        <th data-field="temp" class="numberInput" style="background-color:yellow;">Temp</th>
+                                        <th data-field="tempOff" class="numberInput" data-visible="false">Temp off</th>
+                                        <th data-field="tempOn" class="numberInput" data-visible="false">Temp on</th>
+                                        <th data-field="sg" class="numberInput">SG</th>
+                                        <th data-field="abv" class="numberInput">ABV</th>
+                                        <th data-field="ph">pH</th>
+                                        <th data-field="degas">Degas</th>
+                                        <th data-field="o2Lpm" data-visible="false">O2 LPM</th>
+                                        <th data-field="min" data-visible="false">MIN</th>
+                                        <th data-field="dap" data-visible="false">DAP</th>
+                                        <th data-field="fermK" data-visible="false">Ferm K</th>
+                                        <th data-field="phControl" data-visible="false">phControl</th>
+                                        <th data-field="postPh" data-visible="false">Post pH</th>
+                                        <th data-field="note" data-visible="false">Notes</th>
+                                        <!-- These are used for storing/recalling row data in the database -->
+                                        <th data-field="id" data-visible="false">Record Id</th><!-- record id -->
+                                        <th data-field="batchId" data-visible="false">Batch id</th><!-- batch id of the current record -->
+                                        <th data-field="operate" data-formatter="operateEditFormatter" data-events="operateEvents" class="noEdit iconCol"></th><!-- edit/remove buttons -->
+                                    </tr>
+                                </thead>
+                              </table>
+                              
+                            <div class="hline-bottom"></div>
+                          
+                          </div><!-- CLOSE FERMENTING TABLE -->
+                      </div><!-- CLOSE NESTED ROW -->
+                      
+                 </div>
+            </div>
+      
+
+
+  </div><!-- CLOSE FERMENTATION TAB -->
+  
+  <div class="tab-pane fade" id="nav-blendDetails" role="tabpanel" aria-labelledby="nav-blendDetails-tab"><!-- OPEN BLENDING TAB -->
+  
+  
+       <div class="row add-top-margin"> <!-- OPEN ROW -->
+             <div class="col-md-12">
+                  <div class="row justify-content-between"><!-- START NESTED ROW -->
+                  
+                      <div class="col-6 col-md-2">
+                          <div class="form-group">
+                              <label for="totalGallonsTransferred">Total blended</label>
+                              <input class="form-control save-field batch-input" type="number" min="0" step="0.001" name="totalGallonsTransferred" id="totalGallonsTransferred" required=""  >
+                          </div>
+                      </div>
+    
+                      <div class="col-12 col-md-8"><!-- BLENDING TABLE aka TRANSFER TABLE -->
+                              <div class="tableHeader addBtnDiv" style="background-color:#897c79;">
+                                  <span style="padding-left:60px;">Transfers</span>
+                                  <button type="button" id="batch-blendBtn" class="float-right btn btn-light newRow">ADD</button>
+                                  <button class="float-right btn btn-light loadingBtn newRow" id="batch-blendBtn-loading" type="button" disabled>
+                                      <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+                                      <span class="sr-only">Loading...</span>
+                                  </button>
+                              </div>
+                              
+                              <table id="batch-blendTable"
+                              data-height="200"
+                              data-toggle="table"
+                              class="table-borderless">
+                                <thead>
+                                    <tr>
+                                        <th data-field="sourceBatch" class="wideCol batchSelect" data-sortable="true">Batch #</th>
+                                        <th data-field="qty" class="narrowCol numberInput">Qty</th>
+                                        <th data-field="sourceAbv" class="narrowCol noEdit">ABV%</th>
+                                        <th data-field="transferDate" class="narrowCol dateInput">Date</th>
+                                        <!-- Hidden columns -->
+                                        <!-- These are used for storing row data -->
+                                        <th data-field="id" data-visible="false" class="noEdit"></th>
+                                        <th data-field="batchId" data-visible="false" class="noEdit"></th>
+                                        <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" class="noEdit iconCol"></th>
+                                    </tr>
+                                </thead>
+                              </table>
+                        <div class="hline-bottom"></div>
+                  </div><!-- CLOSE BLENDING TABLE -->
+                  
+              </div><!-- CLOSE NESTED ROW -->
+         </div>
+   </div><!-- CLOSE ROW -->
+  
+  
+  </div><!-- CLOSE BLENDING TAB -->
+
+
+</div> <!-- CLOSE HIDE! -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Modal - This modal displays information from the fermentation log -->
+
+
+<div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalTitle" data-ferment-modal-id="date"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid"><!-- This div allows the bootstrap grid to be in the modal dialog -->
+                    <div class="row"><!-- START ROW -->
+                    
+                        <div class="col-12 col-md-6">
+                            <div class="row">
+                            
+                                <div class="col-12 col-md-12">
+                                        <label class="section-label">Temperature</label>
+                                        <span class="bottom-border"></span>
+                                </div>
+                                
+                                <div class="col-4 col-md-4">
+                                    <div class="form-group">
+                                        <label for="temp-modal">Temp</label>
+                                        <input class="form-control modalInput" type="number" step="0.001" data-ferment-modal-id="temp" name="temp-modal" id="temp-modal">
+                                    </div>
+                                </div>
+                                <div class="col-4 col-md-4">
+                                    <div class="form-group">
+                                        <label for="tempOff-modal">Ctrl off</label>
+                                        <input class="form-control modalInput" type="number" step="0.001" data-ferment-modal-id="tempOff" name="tempOff-modal" id="tempOff-modal">
+                                    </div>
+                                </div>
+                                <div class="col-4 col-md-4">
+                                    <div class="form-group">
+                                        <label for="tempOn-modal">Ctrl on</label>
+                                        <input class="form-control modalInput" type="number" step="0.001" data-ferment-modal-id="tempOn" name="tempOn-modal" id="tempOn-modal">
+                                    </div>
+                                </div>
+                                
+                             </div>
+                         </div>
+                         <div class="col-12 col-md-6">
+                            <div class="row">
+                            
+                                <div class="col-12 col-md-12">
+                                        <label class="section-label">Gravity</label>
+                                        <span class="bottom-border"></span>
+                                </div>
+                                <div class="col-4 col-md-4">
+                                    <div class="form-group">
+                                        <label for="sg-modal">SG</label>
+                                        <input class="form-control modalInput" type="number" step="0.001" data-ferment-modal-id="sg" name="sg-modal" id="sg-modal">
+                                    </div>
+                                </div>
+                                <div class="col-4 col-md-4">
+                                    <div class="form-group">
+                                        <label for="abv-modal">ABV</label>
+                                        <input class="form-control modalInput" type="number" step="0.001" data-ferment-modal-id="abv" name="abv-modal" id="abv-modal">
+                                    </div>
+                                </div>
+                                
+                                
+                             </div>
+                         </div>
+                         <div class="col-12 col-md-6">
+                            <div class="row">
+                            
+                                <div class="col-12 col-md-12">
+                                      <label class="section-label">Gas</label>
+                                      <span class="bottom-border"></span>
+                                </div>
+                                <div class="col-4 col-md-4">
+                                    <div class="form-group">
+                                        <label for="degas-modal">Degas</label>
+                                        <input class="form-control modalInput" type="text" data-ferment-modal-id="degas" name="degas-modal" id="degas-modal">
+                                    </div>
+                                </div>
+                                <div class="col-4 col-md-4">
+                                    <div class="form-group">
+                                        <label for="o2Lpm-modal" >O2 LPM</label>
+                                        <input class="form-control modalInput" title="Oxygen litres per minute" type="text" data-ferment-modal-id="o2Lpm" name="o2Lpm-modal" id="o2Lpm-modal">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-4 col-md-4">
+                                    <div class="form-group">
+                                        <label for="min-modal">Min</label>
+                                        <input class="form-control modalInput" title="Amount of time O2 is on" type="text" data-ferment-modal-id="min" name="min-modal" id="min-modal">
+                                    </div>
+                                </div>
+                                
+                                
+                                
+                             </div>
+                         </div>
+                         <div class="col-12 col-md-6">
+                            <div class="row">
+                            
+                                <div class="col-12 col-md-12">
+                                        <label class="section-label">pH</label>
+                                        <span class="bottom-border"></span>
+                                </div>
+                                <div class="col-4 col-md-4">
+                                    <div class="form-group">
+                                        <label for="ph-modal">pH</label>
+                                        <input class="form-control modalInput" type="number" step="0.001" data-ferment-modal-id="ph" name="ph-modal" id="ph-modal">
+                                    </div>
+                                </div>
+                                <div class="col-4 col-md-4">
+                                    <div class="form-group">
+                                        <label for="phControl-modal">pH Ctrl</label>
+                                        <input class="form-control modalInput" type="text" data-ferment-modal-id="phControl" name="phControl-modal" id="phControl-modal">
+                                    </div>
+                                </div>
+                                <div class="col-4 col-md-4">
+                                    <div class="form-group">
+                                        <label for="postPh-modal">Post pH</label>
+                                        <input class="form-control modalInput" type="text" data-ferment-modal-id="postPh" name="postPh-modal" id="postPh-modal">
+                                    </div>
+                                </div>
+                                
+                             </div>
+                         </div>
+                         
+                         
+                    </div><!-- END ROW -->
+                    
+                    
+                    <div class="row"><!-- START ROW -->
+                         
+                         <div class="col-md-12">
+                            <div class="row">
+                            
+                                <div class="col-12 col-md-12">
+                                        <label class="section-label">Nutrients</label>
+                                        <span class="bottom-border"></span>
+                                </div>
+                                <div class="col-4 col-md-2">
+                                    <div class="form-group">
+                                        <label for="nutrient1-modal">Nutrient 1</label>
+                                        <input class="form-control modalInput" type="text" data-ferment-modal-id="nutrient1" name="nutrient1-modal" id="nutrient1-modal">
+                                    </div>
+                                </div>
+                                <div class="col-4 col-md-2">
+                                    <div class="form-group">
+                                        <label for="nutrient2-modal">Nutrient 2</label>
+                                        <input class="form-control modalInput" type="text" data-ferment-modal-id="nutrient2" name="nutrient2-modal" id="nutrient2-modal">
+                                    </div>
+                                </div>
+                                <div class="col-4 col-md-2">
+                                    <div class="form-group">
+                                        <label for="nutrient3-modal">Nutrient 3</label>
+                                        <input class="form-control modalInput" type="text" data-ferment-modal-id="nutrient3" name="nutrient3-modal" id="nutrient3-modal">
+                                    </div>
+                                </div>
+                                <div class="col-4 col-md-2">
+                                    <div class="form-group">
+                                        <label for="nutrient4-modal">Nutrient 4</label>
+                                        <input class="form-control modalInput" type="text" data-ferment-modal-id="nutrient4" name="nutrient4-modal" id="nutrient4-modal">
+                                    </div>
+                                </div>
+                                <div class="col-4 col-md-2">
+                                    <div class="form-group">
+                                        <label for="nutrient5-modal">Nutrient 5</label>
+                                        <input class="form-control modalInput" type="text" data-ferment-modal-id="nutrient5" name="nutrient5-modal" id="nutrient5-modal">
+                                    </div>
+                                </div>
+                                <div class="col-4 col-md-2">
+                                    <div class="form-group">
+                                        <label for="nutrient6-modal">Nutrient 6</label>
+                                        <input class="form-control modalInput" type="text" data-ferment-modal-id="nutrient6" name="nutrient6-modal" id="nutrient6-modal">
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                        
+                    </div><!-- END ROW -->
+                    
+                    <div class="row"><!-- START ROW -->
+                         
+                         <div class="col-md-12">
+                            <div class="row">
+                            
+                                <div class="col-12 col-md-12">
+                                    <div class="form-group">
+                                        <label for="note-modal">Note</label>
+                                        <textarea class="form-control modalInput" type="text" data-ferment-modal-id="note" name="note-modal" id="note-modal"></textarea>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                        
+                    </div><!-- END ROW -->
+                    
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+

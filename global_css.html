@@ -1,0 +1,198 @@
+<style>
+/*@import url('https://fonts.googleapis.com/css?family=Bowlby+One+SC');
+font-family: 'Bowlby One SC', cursive;*/
+
+/* color scheme: https://www.color-hex.com/color/798689 */
+
+@import url('https://fonts.googleapis.com/css?family=Gupter');
+@import url('https://fonts.googleapis.com/css?family=Montserrat&display=swap');
+
+
+body { 
+  width: 100%; 
+  height: 100%; 
+  /*background: #ecf0f1;*/
+  color: #34495e;
+
+}
+
+
+label {
+  white-space:nowrap;
+}
+
+/* Header links are automatically hidden and show if the page is NOT "login" */
+#headerOptions {
+  display: none;
+}
+
+
+/* Disables <a> elements when "disabledLink is a class*/
+a.disabledLink {
+  pointer-events: none;
+  cursor: default;
+}
+
+/* Keeps table cell contents from overflowing within a table*/
+td {
+    max-width: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/*Makes input and select elements fit inside a table cell*/
+td input{
+    min-width: 10px;
+    max-width: 100%;
+    width: 100%;
+} 
+
+
+/* Header background color */
+.navbar {
+  background-color:#798689 !important;
+}
+
+.tableHeader {
+  color:white;
+  border-radius: 5px;
+  text-align:center;
+  height:50px;
+  padding-bottom: 1px;
+  padding-top: 5px;
+  margin-bottom: 5px;
+  font-size: 28px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+
+
+/* new row button for tables*/
+.tableHeader .newRow {
+  margin-right:15px;
+  padding-bottom:-20px;
+  height:90%;
+ /* color: #798689;*/
+}
+/*Hide table icons*/
+.deletingIcon{
+  display: none;
+}
+.normalIcon{
+  display: inline;
+}
+.saveIcon{
+  display: none;
+}
+
+.addBtnDiv {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  position: relative;
+}
+/*Header for sections*/
+.sectionHeader {
+  font-size: 18px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: bold;
+  margin-bottom: 2px;
+  display:inline-block;
+  margin-top: 5px;
+}
+
+/*Some header divs in the recipe page are too far to the right. This offsets them*/
+.move-div-left {
+   margin-left: -15px;
+}
+
+
+.form-group {
+  margin-right: 0;
+}
+
+.add-top-margin{
+  margin-top:15px;
+}
+
+/*Table column width*/
+.widecol {
+  width: 50%;
+}
+/*Table column width*/
+.narrowCol {
+  width: 15%;
+}
+/*Table column width*/
+.iconCol {
+  width: 90px;
+  white-space: normal !important;
+}
+
+#alertUser {
+  display:none;
+  font-size:18px;
+  color:red;
+  text-align: center;
+}
+
+
+/* UNCOMMENT */
+.loadTable{
+  display: none;
+}
+
+.loadingBtn {
+  display: none;
+}
+
+
+.fileLoadingSpinner {
+  display: none;
+}
+
+#indexLoader{
+  display: none;
+}
+
+/*Adds a bottom line underneath labels*/
+.bottom-border:after {
+   content: "";
+   margin-left: 15px;
+   margin-bottom: 5px;
+   background: black;
+   position: absolute;
+   bottom: 0;
+   left: 0;
+   height: 1px;
+   width: 95%;
+}
+
+
+   
+
+
+.left-border:after {
+  content: "";
+   margin-left: 0;
+   margin-bottom: 5px;
+   background: #e6e6e6;
+   position: absolute;
+   bottom: 0;
+   left: 0;
+   height: 80%;
+   width: 1px;
+}
+
+/* Do stuff if screen is small than 768 */
+
+@media only screen and (min-width: 768px) {
+
+.side-bar-left-line {
+  border-left: 1px solid #e6e6e6; 
+  background-color:#f5fcfc;
+}
+
+}
+
+</style>

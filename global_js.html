@@ -1,0 +1,362 @@
+<script>
+
+/**
+* This object is used to store temporary values
+* that are used during a user's session
+*
+* This allows for rapid page loads when navigating between sections
+* It also reduces the number of google.script calls
+* There are two daily quotas that this helps manage
+* - 90 min script time
+* - 30 concurrent users (will only happen if multiple companies are using the same script
+*/
+var memory_ = {currentPage: '',
+                pages:{},
+                tables:{batch:{},
+                        inventory:{},
+                        vessels:{},
+                        recipe:{},
+                },
+                lists:{// globally used lists
+                },
+                user:{}
+              };
+
+
+   $(function() {
+     
+     createHeaderEventListener();
+     
+     $('#logout').click(function(){
+       google.script.run.withSuccessHandler(logoutSuccess).userLogout();
+     });
+      
+      // Load default page
+      google.script.run.withSuccessHandler(showPage).include(default_page,true);
+    });
+   
+   
+   // show user a message
+  function alertUser(string){
+    $alertDiv.show();
+    $alertDiv.html(string);
+  }
+   
+   
+   
+   
+   
+   
+   
+   function createHeaderEventListener(){
+   
+     // Event listener for navbar and sidenav links
+     // Any link with the pageLnk class on click
+      $(".pageLnk").click(function(e) {
+        e.preventDefault();
+        $('.navbar-collapse').collapse('hide');
+        $("#indexLoader").show();
+        var id = e.target.id;
+        
+        if (id == '') return;
+        
+        clearActiveHeader()
+        
+        // Check if file exists in the temporary global variable
+        // If it exists, use the temporary data instead of calling the server
+        // The id is the file name
+        var file = memory_.pages[id];
+        
+        if (file) {
+          showPage(file);
+          return;
+        }
+        
+        google.script.run.withSuccessHandler(showPage).include(id,true);
+      });
+   
+   
+   }
+   
+
+   
+   
+   
+   // Create an on change trigger for form fields for whichever file is loaded
+   // This allows form fields to automatically save when they are changed
+   function createOnChangeTrigger(){
+   
+     // This needs to be bound to a specific class. because another class ("form-control") is already bound to select elements by one of the libraries
+     // explanation: https://stackoverflow.com/a/210345
+     // I didn't bind it to "select.save-field", because I want it to trigger on input fields as well
+     // And that would require more change events to manage
+     $('.save-field').off('change.save-field').on('change.save-field', function(e) {
+         var ths = $(this);
+        
+       // The second trigger is coming from a DIV. This if statement catches any change triggers coming from a div
+        if (ths.prop("tagName") === 'DIV') return;
+        
+        // Check if there is a selected record
+        var currentRecord = getSelectedRecord();
+        if (!currentRecord) {
+          customAlert('error','No record selected'); 
+          return;
+        }
+        
+        var sheetName = memory_.tables[memory_.currentPage].sheetName;
+        
+        // The element ids should be a normalized version of the spreadsheet ids
+        var columnName = ths.attr('id');
+        
+        var output = {
+          sheetName:sheetName,
+          record: currentRecord,
+          columnName: columnName,
+          value:ths.val(),
+          recordColumnName: memory_.currentPage + 'Id',
+        }
+        
+        google.script.run.withFailureHandler(rowSavingError).updateRecord(JSON.stringify(output));
+       });
+     
+   }
+   
+   
+   
+   
+   
+   /**
+   * Gets the selected record from the select element at the top of the page
+   */
+   function getSelectedRecord(){
+     // Get record id from the temporary storage object
+     return memory_['current'+capitalizeFLetter(memory_.currentPage)+'Id'];
+     // Get record id from the page's record select element at the top
+     //return $('#'+memory_.currentPage+'Selector').children("option:selected").val();
+     
+   }
+   
+   
+   
+   
+   
+    function capitalizeFLetter(string) { 
+       return string[0].toUpperCase() + string.slice(1); 
+    } 
+   
+   
+   
+   
+   // These two functions don't work right now
+   // uncomment
+   function setActiveHeader(e){
+     var parent = e.target.parentNode;
+     $(parent).addClass("active");
+   }
+   function clearActiveHeader(){
+     $(".pageLnk").removeClass("active");
+   }
+   
+   
+   
+    /*
+    ** Opens url
+    */
+    function openUrl(url){
+      window.open(url,'_top')
+    }
+  
+  
+  
+  /*
+  ** Dynamically load html, js, and css pages based on selection from navbar
+  ** The js needs to be inserted as a new element, or the functions will not work
+  ** I'm not certain if css requires the same, but I did it anyway
+  **
+  ** This is only for loading sub-pages. It is not used for loading the index or other global files
+  **
+  ** Loading the JS this way prohibits the use of "<"
+  */
+  function showPage(obj){
+  
+    var fileData = obj.fileData;
+    var fileName = obj.fileName;
+    
+    
+    
+    // Load css
+    var css = document.createElement("style");
+    css.textContent = fileData.css;
+    document.getElementsByTagName("head")[0].appendChild(css);
+    
+    // Load HTML
+    document.getElementById('htmlOutput').innerHTML = fileData.html;
+    
+    // Load JS
+    var script = document.createElement("script");
+    script.textContent = fileData.js;
+    document.getElementsByTagName("head")[0].appendChild(script);
+    
+    // Show header links if the loaded page is NOT "login"
+    if (fileName !== 'login') $('#headerOptions').show();
+     
+    
+    memory_.currentPage = fileName;
+    // Put file data into a global variable, so it can be recalled quickly
+    memory_.pages[fileName] = obj; 
+   
+   }
+   
+   
+  
+   
+   /**
+   * logout current user
+   * This function is called from the "global_header" file
+   */
+   function logoutSuccess(response) {
+      google.script.run.withSuccessHandler(showPage).include(response,true);
+    }
+   
+ 
+  
+  
+  // Testing this - it may need to be deleted in the future if I don't use it
+  function formatDateForInputField(value) {
+    var dt = new Date(value);
+    return dt.getFullYear( ) +'-'+ (dt.getMonth( ) + 1) + '-' + dt.getDate( );
+  }
+
+
+
+
+
+function fillHtmlSelect(elementId,htmlOptions){
+  // Add options and refresh selector
+  $(elementId).append(htmlOptions).selectpicker('refresh');
+  // Set initial value to nothing
+  $(elementId).selectpicker('val', '');
+}
+  
+
+
+function refreshSelectElements(){
+
+  // This makes the select box work on IOS
+  if (/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent)) {
+      $.fn.selectpicker.Constructor.DEFAULTS.mobile = true;
+  }
+  // When an item is placed within the same div as an element with the selectpicker class
+  // The selects do not show
+  // Refreshing them seems to fix this issue
+  $('select').selectpicker('refresh');
+}
+
+
+
+
+ /**
+ * Clear and enable all input/textarea/select elements
+ */
+ function clearInputElements(){
+ // Clear and enable input and textarea fields
+   $('input.form-control, textarea.form-control').each(function(){
+     var t = $(this);
+     
+     // If the element id is "created" then don't enable it
+     if (t.attr('id') !== 'created') {
+        t.val('').removeAttr('disabled');
+     }
+   });
+   
+   // Clear checkboxes
+   $('input:checkbox.form-control').prop( "checked", false );
+  
+   // Clear radio buttons
+   $('input:radio').prop('checked', false);
+   // Activate first option and enable select fields
+   $('select.form-control').each(function () {
+       $(this).val(1).removeAttr('disabled').selectpicker('refresh');
+   });
+    
+    
+ }
+
+
+
+
+
+
+ 
+ /**
+ * Display a custom toast message in the upper-right-hand corner of the screen
+ *
+ * @param iconType {string} The type of icon to show in the message window
+ * @param message {string} The message being displayed
+ *
+ * return nothing
+ */
+ function customToast(iconType,message){
+     Swal.fire({
+    icon: iconType,// success/warning/info
+    title:message,
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    onOpen: (toast) => {
+      toast.addEventListener('mouseenter', Swal.stopTimer)
+      toast.addEventListener('mouseleave', Swal.resumeTimer)
+    }
+  });
+
+}
+
+
+
+
+ /**
+ * Display a custom alert 
+ *
+ * @param iconType {string} The type of icon to show in the message window
+ * @param message {string} The message being displayed
+ *
+ * return nothing
+ */
+ function customAlert(iconType,message){
+    Swal.fire({
+      icon: iconType,
+      title: 'Oops...',
+      text: message,
+     // footer: '<a href>Why do I have this issue?</a>'
+    })
+
+}
+
+
+
+
+function getDataFromArray_(array) {
+  return getData.fromArray(array).object;
+}
+
+/**
+* SOURCE: https://docs.google.com/document/d/1tIGrDRvYBp4dExzcIS6uIevLlTpGfctLtu5LP5dYn1Y/edit
+* For every row of data in data, generates an object that contains the data. Names of
+* object fields are defined in keys.
+* Methods:
+*   - fromSheet: arguments(SpreadsheetApp sheet object, headerIndex)
+*   - fromArray: arguments(JavaScript 2d array, headerIndex)
+* @return {object} 
+*         object: array as an object
+          valuesArray: Array values without the header row
+          normalizedHeader: Header with normalized values
+          header: header with unchanged values
+*
+*/
+var getData=function(r){function n(r,n){var t=function(r){for(var n=[],t=0;t<r.length;++t)n.push(a(r[t]));return n}(n);return{object:e(r,t),valuesArray:r,normalizedHeader:t,header:n}}function t(r){return r.length<2}function e(r,n){for(var t=[],e=0;e<r.length;++e){for(var a={},o=!1,f=0;f<r[e].length;++f){var i=r[e][f];u(i)?a[n[f]]="":(a[n[f]]=i,o=!0)}o&&t.push(a)}return t}function a(r){for(var n,t="",e=!1,a=0;a<r.length;++a){var u=r[a];" "==u&&t.length>0?e=!0:((n=u)>="A"&&n<="Z"||n>="a"&&n<="z"||o(n))&&(0==t.length&&o(u)||(e?(e=!1,t+=u.toUpperCase()):t+=u.toLowerCase()))}return t}function u(r){return"string"==typeof r&&""==r}function o(r){return r>="0"&&r<="9"}return r.fromSheet=function(r,e){var a=r.getDataRange().getValues();if(t(a))return{};var u=e||1;return n(a.slice(u),a[u-1])},r.fromArray=function(r,e){if(t(r))return{};var a=e||1;return n(r.slice(a),r[a-1])},r}(getData||{});
+
+
+
+
+</script>

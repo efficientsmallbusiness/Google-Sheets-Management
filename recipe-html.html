@@ -1,0 +1,347 @@
+<div class="container">
+
+<h1>RECIPE</h1>
+
+  <div class="row hline-bottom">
+        <div class="col-12">
+              <div class="row clearAlert input-group">
+                    <div class="col-12 col-md-6 input-group-prepend">
+                         <span class="input-group-text bg-info text-light" id="recipeSelector-label">Select</span>
+                    
+                          <select class="selectpicker" id="recipeSelector" data-live-search="true" data-live-search-placeholder="Search" title="Please select..." data-width="100%">
+                              
+                         </select>
+                          <div class="text-center fileLoadingSpinner">
+                              <div class="spinner-grow text-info" role="status">
+                                <span class="sr-only">Loading...</span>
+                              </div>
+                        </div>  
+                        
+                    </div>
+               </div>
+        </div>
+  </div>
+  
+
+  <div class="row add-top-margin"> <!-- START DETAIL ROW -->
+      
+        <div class="col-12 col-md-7">
+        
+            
+            <div class="col-12 col-md-12 move-div-left" style="margin-bottom:10px;">
+                <label class="sectionHeader">
+                    <span>GENERAL</span> 
+                </label>
+                <span class="bottom-border"></span>
+            </div>
+            
+            <div class="row"><!-- START NESTED ROW -->
+            
+                <div class="col-12 col-md-5">
+                    <div class="form-group">
+                        <label for="recipeName">Product Name</label>
+                        <input class="form-control save-field recipe-input" type="text" name="recipeName" id="recipeName" required=""  >
+                    </div>
+                </div>
+                <div class="col-12 col-md-7">
+                    <div class="form-group">
+                        <label for="shortDescription">Short description</label>
+                        <input class="form-control save-field recipe-input" type="text" maxlength="50" name="shortDescription" id="shortDescription" required=""  >
+                    </div>
+                </div>
+                
+            
+            </div><!-- END NESTED ROW -->
+            <div class="row"><!-- START NESTED ROW -->
+            
+                <div class="col-6 col-lg-3">
+                    <div class="form-group">
+                        <label for="alcType">Alc. type</label>
+                        <select id="alcType" class="form-control save-field selectpicker"   title="Please select..." name="alcType">
+                          <option>MEAD</option>
+                          <option>CIDER</option>
+                          <option>WINE</option>
+                          <option>OTHER</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="form-group">
+                        <label for="recipeStatus">Status</label>
+                        <select id="recipeStatus" class="form-control save-field selectpicker"  title="Please select..." name="recipeStatus"  >
+                          <option>CONCEPT</option>
+                          <option>DEVELOPING</option>
+                          <option>ACTIVE</option>
+                          <option>RETIRED</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group col-4 col-lg-2">
+                    <label for="targetGallons">Target Gallons</label>
+                    <input class="form-control save-field recipe-input" type="text" name="targetGallons" id="targetGallons" required=""  >
+                </div>
+                <div class="col-3 col-lg-2">
+                    <div class="form-group">
+                        <label for="carbonated">Carb.</label>
+                        <select id="carbonated" class="form-control save-field selectpicker"  title="Select" name="carbonated"  >
+                          <option value="Yes">Yes</option>
+                          <option value="No">No</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group col-3 col-md-2 float-right">
+                    <label for="gPerMl">g CO2/100ml</label>
+                    <input class="form-control save-field recipe-input" type="text" name="gPerMl" id="gPerMl" required=""  >
+                </div>
+            
+            </div><!-- END NESTED ROW -->
+            <div class="row"><!-- START NESTED ROW -->
+            
+                <div class="col-4 col-md-4">
+                
+                    <div class="col-12 move-div-left">
+                        <label class="sectionHeader">
+                            <span>GRAVITY</span> 
+                        </label>
+                        <span class="bottom-border"></span>
+                    </div>
+                    <div class="col-10 form-group">
+                        <label for="startGravity">Start</label>
+                        <input class="form-control save-field" type="number" min="0" step="0.001" name="startGravity" id="startGravity" value="1.12" required=""  >
+                    </div>
+                    <div class="col-10 form-group">
+                        <label for="endGravity">End</label>
+                        <input class="form-control save-field" type="number" min="0" step="0.001" name="endGravity" id="endGravity" value="1.012" required=""  >
+                    </div>
+                    
+                </div>
+                <div class="col-4 col-md-4 left-border">
+                
+                    <div class="col-12 move-div-left">
+                          <label class="sectionHeader">
+                              <span>BRIX</span> 
+                          </label>
+                          <span class="bottom-border"></span>
+                    </div>
+                    <div class="col-10 form-group">
+                        <label for="startBrix">Start</label>
+                        <input class="form-control save-field" type="number" min="0" step="0.001" name="startBrix" id="startBrix" value="28.08" required=""  >
+                    </div>
+                    <div class="col-10 form-group">
+                        <label for="endBrix">End</label>
+                        <input class="form-control save-field" type="number" min="0" step="0.001" name="endBrix" id="endBrix" value="5.08" required=""  >
+                    </div>
+                    
+                </div>
+                <div class="col-4 col-md-4 left-border">
+                
+                    <div class="col-12 move-div-left">
+                          <label class="sectionHeader">
+                              <span>ABV</span> 
+                          </label>
+                          <span class="bottom-border"></span>
+                    </div>
+                    <div class="col-10 form-group">
+                        <label for="abvBase">Base</label>
+                        <input class="form-control save-field" type="number" min="0" step="0.001" name="abvBase" id="abvBase" value="13.50" required=""  >
+                    </div>
+                    <div class="col-10 form-group">
+                        <label for="abvFinal">Final</label>
+                        <input class="form-control save-field recipe-input" type="text" name="abvFinal" id="abvFinal" required=""  >
+                    </div>
+                    
+                </div>
+                
+            </div><!-- END NESTED ROW -->
+            
+              <div class="col-12 col-md-12 move-div-left" style="margin-bottom:10px;">
+                  <label class="sectionHeader">
+                      <span>NOTES</span> 
+                  </label>
+                  <span class="bottom-border"></span>
+              </div>
+              
+              <div class="row"><!-- START NESTED ROW -->
+              
+                  <div class="col-12">
+                      <div class="form-group">
+                        <textarea class="form-control save-field recipe-input" name="notes" id="notes"></textarea>
+                      </div>
+                  </div>
+                  
+              </div><!-- END NESTED ROW -->
+           
+            
+        </div>
+          
+          
+          
+          
+        <!-- SIDE BAR -->
+        <div class="col-12 col-md-5 side-bar-left-line">
+          
+          
+              <div class="row"><!-- START NESTED ROW -->
+              
+                  <div class="col-12 col-md-12" style="margin-bottom:10px;">
+                        <label class="sectionHeader">
+                            <span>TTB:</span> 
+                            <span style="font-weight:normal;">Not submitted</span>
+                        </label>
+                        <span class="bottom-border"></span>
+                  </div>
+                  <div class="col-12 col-md-12">
+                      <div class="form-group">
+                          <label for="cola">COLA</label>
+                          <input class="form-control save-field recipe-input" type="text" name="cola" id="cola" required=""   >
+                      </div>
+                  </div>
+                  <div class="col-6">
+                  
+                      <div class="form-group">
+                          <label for="formulaSubmitted" style="">Formula submitted</label>
+                          <input class="form-control save-field recipe-input" type="date" name="formulaSubmitted" id="formulaSubmitted" required=""  >
+                      </div>
+                      <div class="form-group">
+                          <label for="formulaApproved">Formula approved</label>
+                          <input class="form-control save-field recipe-input" type="date" name="formulaApproved" id="formulaApproved" required=""  >
+                      </div>
+                      
+                  </div>
+                  <div class="col-6 left-border">
+                      
+                      <div class="form-group">
+                          <label for="labelSubmitted">Label submitted</label>
+                          <input class="form-control save-field recipe-input" type="date" name="labelSubmitted" id="labelSubmitted" required=""  >
+                      </div>
+                      <div class="form-group">
+                          <label for="labelApproved">Label approved</label>
+                          <input class="form-control save-field recipe-input" type="date" name="labelApproved" id="labelApproved" required=""  >
+                      </div>
+                      
+                  </div>
+                
+              </div><!-- END NESTED ROW -->
+              <div class="row"><!-- START NESTED ROW -->
+                  
+                  <div class="col-12 col-md-12" style="margin-bottom:10px;">
+                        <label class="sectionHeader">
+                            <span>INFORMATION</span> 
+                        </label>
+                        <span class="bottom-border"></span>
+                  </div>
+                  <div class="col-12">
+                      <div class="form-group">
+                        <label for="notableDetails">Notable details</label>
+                        <textarea class="form-control save-field recipe-input"  id="notableDetails">It was aged for 900 years!</textarea>
+                      </div>
+                  </div>
+                  <div class="col-12">
+                      <div class="form-group">
+                        <label for="awards">Awards</label>
+                        <textarea class="form-control save-field recipe-input"  id="awards">1 Gold Star!</textarea>
+                      </div>
+                  </div>
+                  <div class="col-6 col-md-6">
+                      <div class="form-group">
+                          <label for="created">Created</label>
+                          <input class="form-control save-field"  type="date" name="created" id="created" required=""   disabled>
+                      </div>
+                  </div>
+              
+              
+              </div><!-- END NESTED ROW -->
+          </div> <!-- END SIDE BAR -->
+          
+          
+         
+          
+  </div><!-- END DETAIL ROW -->
+  
+ <div class="row add-top-margin"> <!-- TABLE ROW -->
+    
+      <div class="col-lg-6"> <!-- INGREDIENT TABLE -->
+        
+          <div class="tableHeader addBtnDiv" style="background-color:#79897c;">
+              <span style="padding-left:60px;">Ingredients</span>
+              <button type="button" id="recipe-ingrBtn" class="float-right btn btn-light newRow">ADD</button>
+              <button class="float-right btn btn-light loadingBtn newRow" id="recipe-ingrBtn-loading" type="button" disabled>
+                  <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+                  <span class="sr-only">Loading...</span>
+              </button>
+          </div>
+        <table id="recipe-ingredientTable"
+        data-height="200"
+        data-toggle="table"
+        class="table-borderless">
+            <thead>
+                <tr>
+                    <th data-field="ingredient" class="wideCol ingredientSelect" data-sortable="true">Ingredient</th>
+                    <th data-field="qty" class="narrowCol numberInput">Qty</th>
+                    <th data-field="uom" class="noEdit narrowCol">UoM</th>
+                    <th data-field="contactTime" class="narrowCol textInput">Time</th>
+                    <!-- Hidden columns -->
+                    <!-- These are used for storing row data -->
+                    <th data-field="id" data-visible="false"></th>
+                    <th data-field="batch" data-visible="false"></th>
+                    <th data-field="type" data-visible="false"></th>
+                    <th data-field="created" data-visible="false"></th>
+                    <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" class="noEdit iconCol"></th>
+                </tr>
+            </thead>
+        </table>
+        
+        <div class="hline-bottom"></div>
+      
+      </div><!-- CLOSE INGREDIENT TABLE -->
+      
+      <br><br>
+      
+      <div class="col-lg-6"><!-- ADDITIVE TABLE -->
+      
+          
+          <div class="tableHeader addBtnDiv" style="background-color:#897c79;">
+            <span style="padding-left:60px;">Additives</span>
+            <button type="button" id="recipe-addtvBtn" class="float-right btn btn-light newRow">ADD</button>
+            <button class="float-right btn btn-light loadingBtn newRow" id="recipe-addtvBtn-loading" type="button" disabled>
+                <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+                <span class="sr-only">Loading...</span>
+            </button>
+          </div>
+          
+          <table id="recipe-additiveTable"
+          data-height="200"
+          data-toggle="table"
+          class="table-borderless">
+            <thead>
+              <tr>
+                <th data-field="ingredient" class="wideCol ingredientSelect" data-sortable="true">Additive</th>
+              <th data-field="qty" class="narrowCol numberInput">Qty</th>
+              <th data-field="uom" class="noEdit narrowCol">UoM</th>
+              <!-- Hidden columns -->
+              <!-- These are used for storing row data -->
+              <th data-field="id" data-visible="false"></th>
+              <th data-field="batch" data-visible="false"></th>
+              <th data-field="type" data-visible="false"></th>
+              <th data-field="created" data-visible="false"></th>
+              <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" class="noEdit iconCol"></th>
+              </tr>
+            </thead>
+          </table>
+          
+        <div class="hline-bottom"></div>
+      
+      </div><!-- CLOSE ADDITIVE TABLE -->
+      
+      
+      
+   </div><!-- CLOSE TABLE ROW -->
+
+
+
+
+
+
+
+
+</div><!-- CLOSE CONTAINER -->

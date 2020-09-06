@@ -1,0 +1,52 @@
+<!-- ADDING A NEW PAGE
+** The link/button id is used as a base name
+** Ex: <button id="home">
+**
+** The page and scripts must follow a strict naming theme. (using the example from above)
+** html = home-html
+** js = home-js
+** css = home-css
+
+
+** Script for a FAB that doesn't scroll on a mobile browser: https://codepen.io/WebFikirleri/pen/MLXYKm
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <base target="_self">
+     <?!= include("global_library") ?>
+     <?!= include("global_css") ?>
+     <script>
+      var default_page = <?= page; ?>;
+     </script>
+  </head>
+  <body>
+    
+    <?!= include("global_header") ?>
+    <main>
+      <!-- LOADER -->
+      <div class="text-center" id="indexLoader">
+        <div class="spinner-grow text-secondary" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
+      
+      <div id="htmlOutput"></div>
+      
+    </main>
+    <br>
+    <br>
+    <?!= include("global_footer") ?>
+    
+    
+    <?!= include("global_js") ?>
+    
+    <!-- 
+    * These files contain functions for dealing with data coming from the server
+    * This makes it so the server uses fewer of the quotas that are imposed on apps script
+    -->
+    <?!= include("global_js_processServerData") ?>
+    <?!= include("global_js_tables") ?>
+  </body>
+  
+</html>

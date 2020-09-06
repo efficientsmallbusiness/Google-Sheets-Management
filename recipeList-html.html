@@ -1,0 +1,39 @@
+<div class="container">
+
+
+ <div class="row add-top-margin"> <!-- TABLE ROW -->
+    
+      <div class="col-lg-6"> <!-- INGREDIENT TABLE -->
+        
+          <div class="tableHeader addBtnDiv" style="background-color:#79897c;">
+              <span style="padding-left:60px;">Recipes</span>
+              <button type="button" id="recipeList-addBtn" class="float-right btn btn-light newRow">ADD</button>
+              <button class="float-right btn btn-light loadingBtn newRow" id="recipeList-addBtn-loading" type="button" disabled>
+                  <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+                  <span class="sr-only">Loading...</span>
+              </button>
+          </div>
+        <table id="recipeList-ingredientTable"
+        data-height="200"
+        data-toggle="table"
+        class="table-borderless">
+            <thead>
+                <tr>
+                    <th data-field="recipeId" class="noEdit" data-sortable="true">ID</th>
+                    <th data-field="alcType" class="noEdit">Type</th>
+                    <th data-field="shortDescription" class="narrowCol">Description</th>
+                    <th data-field="recipeName">Name</th>
+                    <th data-field="recipeStatus">Status</th>
+                    <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" class="iconCol"></th>
+                </tr>
+            </thead>
+        </table>
+        
+      
+      </div><!-- CLOSE INGREDIENT TABLE -->
+   </div>
+
+
+
+
+</div>
