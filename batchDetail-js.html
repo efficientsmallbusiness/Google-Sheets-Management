@@ -5,28 +5,26 @@
 
 /******** BATCH SPECIFIC VARIABLES *****/
 
-
-  var $alertDiv = $('#alertUser');
   
  /** 
  * The TABLES object contains the string id and element by id for each table in the batch file
  * This was done so that it is easier to find and change these variables (if necessary)
  */
  var TABLES = {
-    ingredient: {el: $('#batch-ingredientTable'),
-                 id:'batch-ingredientTable',
+    ingredient: {el: $('#batchDetail-ingredientTable'),
+                 id:'batchDetail-ingredientTable',
                 },
-    additive: {el: $('#batch-additiveTable'),
-               id: 'batch-additiveTable',
+    additive: {el: $('#batchDetail-additiveTable'),
+               id: 'batchDetail-additiveTable',
               },
-    loss: {el: $('#batch-lossTable'),
-           id: 'batch-lossTable',
+    loss: {el: $('#batchDetail-lossTable'),
+           id: 'batchDetail-lossTable',
           },
-    ferment: {el: $('#batch-fermentTable'),
-              id: 'batch-fermentTable', 
+    ferment: {el: $('#batchDetail-fermentTable'),
+              id: 'batchDetail-fermentTable', 
              },
-    blend: {el: $('#batch-blendTable'),
-            id: 'batch-blendTable',
+    blend: {el: $('#batchDetail-blendTable'),
+            id: 'batchDetail-blendTable',
            },
   }
  
@@ -65,17 +63,6 @@
   
   
  
-
-
-/**
-* hide the alert div in case it's showing
-* This is tied to specific actions instead of the page load
-* because pages are dynamically loaded, so they do not trigger a page load event
-*/
-$(".clearAlert").click(function(){
-    $alertDiv.hide();
-})
-
 
 
 
@@ -164,7 +151,7 @@ function fillBatchOptions(optionsArray){
   $("#indexLoader").hide();
   
   // Store batchOptions as a temporary variable
-  memory_.lists.batch = batchOptions;
+  memory_.lists.batchOptions = batchOptions;
 }
 
 
@@ -231,7 +218,7 @@ function setBatchSelectOption(){
 // Get batch data from server
 function getBatchData(batchId){
 
-   //  var tableData = memory_.tables.batch.tableData;
+   //  var tableData = memory_.tables.batchDetail.tableData;
   
   // Not sure if I want to do this - for sure not right now
   // If the table data is already available, load it
@@ -320,7 +307,7 @@ function loadTables(data){
           // If there is batch data, put the table data into a global temporary variable
           // It should be stringified to match the data coming from the server
           // which will always be stringified
-          memory_.tables.batch.tableData = data;
+          memory_.tables.batchDetail.tableData = data;
       }
   
 }

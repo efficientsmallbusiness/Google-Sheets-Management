@@ -112,10 +112,30 @@ User_.prototype.setDetails = function (userObject) {
 
 
 /**
-* Get active user's stored info
+* @return {object} active user's stored app data
+* In the future, it may be good to cache this value for an hour
+* Right now, I don't anticipate users refreshing their browsers often
 */
 User_.prototype.getDetails = function () {
-if (!this.userDetails_) this.userDetails_ = this.getStorage_('user').get(this.detailsKey);
+// UNCOMMENT
+//if (!this.userDetails_) this.userDetails_ = this.getStorage_('user').get(this.detailsKey);
+//  return this.userDetails_;
+  
+  // The user details are only being cached during development while I'm constantly refreshing the page
+  
+  
+  if (!this.userDetails_) {
+    
+    var cachedRecord = this.getStorage_('cache').get(this.userEmail);
+    if (cachedRecord) {
+      this.userDetails_ = cachedRecord
+    } else {
+      var details = this.getStorage_('user').get(this.detailsKey);
+      this.userDetails_ = details;
+      var minutesToCache = 60;// 1hrs
+      this.getStorage_('cache').set(this.userEmail,details,minutesToCache); 
+    }
+  }
   return this.userDetails_;
 };
 

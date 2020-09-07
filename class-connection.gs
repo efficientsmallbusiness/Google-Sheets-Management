@@ -17,6 +17,7 @@ var globalTemplate_ = (function (){
   clientObject.folders = {main:''};
   clientObject.sheets = {production:''};
   clientObject.id = {row:0,batch:0,recipe:0};
+  clientObject.produced = {gallons:''};
   
   // Blank user object
   var userObject = {}

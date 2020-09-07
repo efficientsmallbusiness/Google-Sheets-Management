@@ -10,14 +10,18 @@
 * - 90 min script time
 * - 30 concurrent users (will only happen if multiple companies are using the same script
 */
-var memory_ = {currentPage: '',
+var memory_ = {currentBatchId: '',
+                currentPage: '',
                 pages:{},
-                tables:{batch:{},
+                tables:{batches:{},
+                        batchDetail:{},
                         inventory:{},
                         vessels:{},
                         recipe:{},
                 },
                 lists:{// globally used lists
+                  batchList:[],
+                  batchOptions:[],
                 },
                 user:{}
               };
@@ -35,14 +39,8 @@ var memory_ = {currentPage: '',
       google.script.run.withSuccessHandler(showPage).include(default_page,true);
     });
    
-   
-   // show user a message
-  function alertUser(string){
-    $alertDiv.show();
-    $alertDiv.html(string);
-  }
-   
-   
+ 
+  
    
    
    
@@ -99,7 +97,7 @@ var memory_ = {currentPage: '',
         // Check if there is a selected record
         var currentRecord = getSelectedRecord();
         if (!currentRecord) {
-          customAlert('error','No record selected'); 
+          customAlert_('error','No record selected'); 
           return;
         }
         
@@ -285,8 +283,6 @@ function refreshSelectElements(){
 
 
 
-
-
  
  /**
  * Display a custom toast message in the upper-right-hand corner of the screen
@@ -296,9 +292,10 @@ function refreshSelectElements(){
  *
  * return nothing
  */
- function customToast(iconType,message){
+ function toast_(message,iconType){
+   
      Swal.fire({
-    icon: iconType,// success/warning/info
+    icon: iconType ? iconType : 'info',// success/error/warning/info/question
     title:message,
     toast: true,
     position: 'top-end',
@@ -313,6 +310,14 @@ function refreshSelectElements(){
 }
 
 
+/**
+* Displays a simple alert to user that looks nicer than the system alert
+*/
+ function alert_(string){
+    Swal.fire(
+      string
+    );
+ }
 
 
  /**
@@ -323,7 +328,7 @@ function refreshSelectElements(){
  *
  * return nothing
  */
- function customAlert(iconType,message){
+ function customAlert_(iconType,message){
     Swal.fire({
       icon: iconType,
       title: 'Oops...',
@@ -335,12 +340,36 @@ function refreshSelectElements(){
 
 
 
+function confirmation_(){
+  Swal.fire({
+    title: 'Are you sure?',
+    text: "You won't be able to revert this!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, delete it!'
+  }).then((result) => {
+    if (result.value) {
+      Swal.fire(
+        'Deleted!',
+        'Your file has been deleted.',
+        'success'
+      )
+    }
+  })
+}
+
 
 function getDataFromArray_(array) {
   return getData.fromArray(array).object;
 }
 
+
+
+
 /**
+* getData
 * SOURCE: https://docs.google.com/document/d/1tIGrDRvYBp4dExzcIS6uIevLlTpGfctLtu5LP5dYn1Y/edit
 * For every row of data in data, generates an object that contains the data. Names of
 * object fields are defined in keys.
@@ -352,7 +381,6 @@ function getDataFromArray_(array) {
           valuesArray: Array values without the header row
           normalizedHeader: Header with normalized values
           header: header with unchanged values
-*
 */
 var getData=function(r){function n(r,n){var t=function(r){for(var n=[],t=0;t<r.length;++t)n.push(a(r[t]));return n}(n);return{object:e(r,t),valuesArray:r,normalizedHeader:t,header:n}}function t(r){return r.length<2}function e(r,n){for(var t=[],e=0;e<r.length;++e){for(var a={},o=!1,f=0;f<r[e].length;++f){var i=r[e][f];u(i)?a[n[f]]="":(a[n[f]]=i,o=!0)}o&&t.push(a)}return t}function a(r){for(var n,t="",e=!1,a=0;a<r.length;++a){var u=r[a];" "==u&&t.length>0?e=!0:((n=u)>="A"&&n<="Z"||n>="a"&&n<="z"||o(n))&&(0==t.length&&o(u)||(e?(e=!1,t+=u.toUpperCase()):t+=u.toLowerCase()))}return t}function u(r){return"string"==typeof r&&""==r}function o(r){return r>="0"&&r<="9"}return r.fromSheet=function(r,e){var a=r.getDataRange().getValues();if(t(a))return{};var u=e||1;return n(a.slice(u),a[u-1])},r.fromArray=function(r,e){if(t(r))return{};var a=e||1;return n(r.slice(a),r[a-1])},r}(getData||{});
 

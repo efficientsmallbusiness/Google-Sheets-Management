@@ -1,17 +1,10 @@
 /*
-Continue working on User_.prototype.isValid
-
-Create a new client if there isn't a client object in the script properties
-*/
-
-/*
-CREATING A NEW CLIENT
-
-dbConn_.prototype.getClientInfo
-This should also create a new userObject when creating the new clientObject
-
-Test this function
-
+- Show loading bar when signing in
+- Add new users from the settings page
+  This should add the new email to the company folder as an editor. 
+  Add a record to the user table 
+  And send a welcome email
+- If user validation ever returns null, log the user out
 
 
 User_.prototype.getDetails 
@@ -19,7 +12,11 @@ This should cache the user's details for 1 hour
 
 */
 
-
+/*
+NOTES:
+Everytime a user logs in or refreshes the page, their user properties are updated
+So if their name is changed in the system, they will need to refresh their browser for changes to take effect.
+*/
 
 function tt(){
   const spreadsheetId = '18GrM5sSx3BsA_4lOT90z17i0OJMvktqDm6-ToV_5des';

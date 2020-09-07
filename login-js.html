@@ -11,38 +11,11 @@
   
     $('#loginBtn').click(function(){
     
-    
-    $.snack('warning', 'Missing input', 3000);
-return;    
-    
-       $.toast({
-          title:'Notice!',
-          subtitle:'11 mins ago',
-          content:'This is a toast message.',
-          type:'error',
-          delay: 3000,
-          style: {
-              toast: '', /** Classes you want to apply separated my a space to each created toast element (.toast) **/
-              info: '', /** Classes you want to apply separated my a space to modify the "info" type style  **/
-              success: '', /** Classes you want to apply separated my a space to modify the "success" type style  **/
-              warning: '', /** Classes you want to apply separated my a space to modify the "warning" type style  **/
-              error: '', /** Classes you want to apply separated my a space to modify the "error" type style  **/
-          }
-//          img: {
-//            src:'image.png',
-//            class:'rounded',
-//            title:'<a href="https://www.jqueryscript.net/tags.php?/Thumbnail/">Thumbnail</a> Title',
-//            alt:'Alternative'
-//          }
-        });
-        
-        
-        return;
       var companyName = $('#company').val();
       var accessCode = $('#accessCode').val();
       
       if (!companyName || !accessCode) {
-        alertUser('Please enter a company name and access code');
+        toast_('Invalid company name or access code','error');
         return;
       };
       
@@ -61,10 +34,11 @@ return;
    */
    function loginSuccess(response) {
       if (!response.loggedIn) {
-        $('#loginResponse').html(response.message);
+        toast_('Invalid login','error','error');
         return;
       }
       
+      // Add user's data to the temporary memory
       memory_.user = response.userData;
       console.log(memory_.user);
       google.script.run.withSuccessHandler(showPage).include(response.page,true);

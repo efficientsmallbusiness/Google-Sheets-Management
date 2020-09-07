@@ -10,12 +10,6 @@ function getDataFromArray_(array) {
   return getRowsData_.fromArray(array).object;
 }
 
-function testGetData(){
-//  var myArray = [['col1','col2','col3'],['val1','val2','val3']];
-//  var newArr = getRowsData_.fromArray(myArray).object;
-//  Logger.log(newArr); 
-
-}
 
 
 

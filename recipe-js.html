@@ -1,7 +1,6 @@
 /******** BATCH SPECIFIC VARIABLES *****/
 
 
-  var $alertDiv = $('#alertUser');
   
  /** 
  * The TABLES object contains the string id and element by id for each table in the batch file
@@ -163,7 +162,7 @@ function loadTables(data){
    // Load tables with no data
    loadTables({isNewRecipe:true});
    // Display success message
-   customToast('success','New batch created!');
+   toast_('New batch created!','success');
  }
  
  

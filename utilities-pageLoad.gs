@@ -18,7 +18,7 @@ const doGet = function (e){
       var param = e.parameter;
     
       // --- Page routing
-      ROUTE.path('batch',loadBatch);
+      ROUTE.path('batchList',loadBatchList_);
       if (ROUTE[param.p]) {
         return ROUTE[param.p]();
       }
@@ -102,8 +102,8 @@ function loadLogin_() {
   return RENDER(PAGE_TITLE,argObj);
 }
 
-function loadBatch() {
-  var argObj = {page:'batch'};
+function loadBatchList_() {
+  var argObj = {page:'batchList'};
   return RENDER(PAGE_TITLE,argObj);
 }
 
