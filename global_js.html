@@ -10,42 +10,142 @@
 * - 90 min script time
 * - 30 concurrent users (will only happen if multiple companies are using the same script
 */
-var memory_ = {currentBatchId: '',
-                currentPage: '',
-                pages:{},
-                tables:{batches:{},
-                        batchDetail:{},
-                        inventory:{},
-                        vessels:{},
-                        recipe:{},
-                },
-                lists:{// globally used lists
-                  batchList:[],
-                  batchOptions:[],
-                },
-                user:{}
-              };
+var memory_ = {activePage: '',
+               loadedRecordId: null,
+               pages:{},// Html, js, css strings
+               pageData:{}, // arrays and object data
+               lists:{// globally used lists
+                 batchList:null,
+                 recipeList:null,
+                 batchOptions:null,
+               },
+               user:{}
+             };
 
-
-   $(function() {
+    // Run when DOM is ready
+   $(function() {onReady()});
+   
+   /*
+   * The code to run when the DOM is ready
+   */
+   function onReady(){
+     // Save user object to memory object
+     memory_.user = serverPayload.user;
      
      createHeaderEventListener();
      
      $('#logout').click(function(){
        google.script.run.withSuccessHandler(logoutSuccess).userLogout();
      });
-      
-      // Load default page
-      google.script.run.withSuccessHandler(showPage).include(default_page,true);
-    });
+     
+      // Load the initial page
+      getPage(serverPayload.initPage);
+   }
+ 
+ 
+ 
+ 
+    /*
+    ** Opens url
+    */
+    function openUrl(url){
+      window.open(url,'_top')
+    }
+  
+  /**
+  * Handles page loading
+  * @param {string} page The page to load 
+  * @param {string} id [optional] The id of the record to load with the page
+  * @return {object} the script files for the selected page: html, js, css
+  */
+  function getPage(pageName,recordId) {
+    const isPageLoad = true;
+    google.script.run.withFailureHandler().withSuccessHandler(showPage).include(pageName,isPageLoad,recordId);
+  }
+  
+  
+   /**
+  * Determines what page to load based on the recordId
+  * @param {string} id The record id to inspect
+  * @return {string} The name of the page to load
+  */
+  function pageToLoad(id){
+    var page;
+    if (id.indexOf('B') >= 0) {
+      // load batchDetail page
+      page = 'batchDetail';
+    } else if (id.indexOf('R') >= 0) {
+      // load recipeDetail page
+      page = 'recipeDetail';
+    }
+    return page || 'home'; // If there is an issue determining the page to load, default to home
+  }
+  
+  
+  
+  /*
+  ** Dynamically load html, js, and css pages based on selection from navbar
+  ** The js needs to be inserted as a new element, or the functions will not work
+  ** I'm not certain if css requires the same, but I did it anyway
+  **
+  ** This is only for loading sub-pages. It is not used for loading the index or other global files
+  **
+  ** Loading the JS this way prohibits the use of "<"
+  */
+  function showPage(obj){
+    var fileData = obj.fileData;
+    var fileName = obj.fileName;
+    
+    // Load HTML
+    $('#htmlOutput').html(fileData.html);
+    
+    // Load css
+    var css = document.createElement("style");
+    css.textContent = fileData.css;
+    $('head').append(css);
+    
+    // Load JS
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.textContent = fileData.js;
+    $('head').append(script);
+    
+    // Show header links if the loaded page is NOT "login"
+    if (fileName !== 'login') $('#headerOptions').show();
+     
+    
+    // if an ID was passed through, put the recordId into temporary memory, so it can be loaded by the individual page's JS
+    if (obj.recordId) {
+      memory_.loadedRecordId = obj.recordId;
+      $(".loading").show();
+    } else {
+      // Remove any previous loaded record Id if a new id wasn't passed
+      memory_.loadedRecordId = null;
+    }
+    
+    memory_.activePage = fileName;
+    // Put file data into a global variable, so it can be recalled quickly
+    memory_.pages[fileName] = obj; 
+   
+   }
+   
+  /**
+  * Shows a custom alert letting the user know a server error occured
+  */
+  function pageLoadError() {
+    customAlert_('error','A server error occured','Oops...');
+  }
+   
+   /**
+   * logout current user
+   * This function is called from the "global_header" file
+   */
+   function logoutSuccess(response) {
+      getPage(response);
+    }
    
  
   
-   
-   
-   
-   
-   
    function createHeaderEventListener(){
    
      // Event listener for navbar and sidenav links
@@ -70,7 +170,7 @@ var memory_ = {currentBatchId: '',
           return;
         }
         
-        google.script.run.withSuccessHandler(showPage).include(id,true);
+        getPage(id);
       });
    
    
@@ -101,7 +201,7 @@ var memory_ = {currentBatchId: '',
           return;
         }
         
-        var sheetName = memory_.tables[memory_.currentPage].sheetName;
+        var sheetName = memory_.tables[memory_.activePage].sheetName;
         
         // The element ids should be a normalized version of the spreadsheet ids
         var columnName = ths.attr('id');
@@ -111,7 +211,7 @@ var memory_ = {currentBatchId: '',
           record: currentRecord,
           columnName: columnName,
           value:ths.val(),
-          recordColumnName: memory_.currentPage + 'Id',
+          recordColumnName: memory_.activePage + 'Id',
         }
         
         google.script.run.withFailureHandler(rowSavingError).updateRecord(JSON.stringify(output));
@@ -128,9 +228,9 @@ var memory_ = {currentBatchId: '',
    */
    function getSelectedRecord(){
      // Get record id from the temporary storage object
-     return memory_['current'+capitalizeFLetter(memory_.currentPage)+'Id'];
+     return memory_['current'+capitalizeFLetter(memory_.activePage)+'Id'];
      // Get record id from the page's record select element at the top
-     //return $('#'+memory_.currentPage+'Selector').children("option:selected").val();
+     //return $('#'+memory_.activePage+'Selector').children("option:selected").val();
      
    }
    
@@ -157,66 +257,6 @@ var memory_ = {currentBatchId: '',
    
    
    
-    /*
-    ** Opens url
-    */
-    function openUrl(url){
-      window.open(url,'_top')
-    }
-  
-  
-  
-  /*
-  ** Dynamically load html, js, and css pages based on selection from navbar
-  ** The js needs to be inserted as a new element, or the functions will not work
-  ** I'm not certain if css requires the same, but I did it anyway
-  **
-  ** This is only for loading sub-pages. It is not used for loading the index or other global files
-  **
-  ** Loading the JS this way prohibits the use of "<"
-  */
-  function showPage(obj){
-  
-    var fileData = obj.fileData;
-    var fileName = obj.fileName;
-    
-    
-    
-    // Load css
-    var css = document.createElement("style");
-    css.textContent = fileData.css;
-    document.getElementsByTagName("head")[0].appendChild(css);
-    
-    // Load HTML
-    document.getElementById('htmlOutput').innerHTML = fileData.html;
-    
-    // Load JS
-    var script = document.createElement("script");
-    script.textContent = fileData.js;
-    document.getElementsByTagName("head")[0].appendChild(script);
-    
-    // Show header links if the loaded page is NOT "login"
-    if (fileName !== 'login') $('#headerOptions').show();
-     
-    
-    memory_.currentPage = fileName;
-    // Put file data into a global variable, so it can be recalled quickly
-    memory_.pages[fileName] = obj; 
-   
-   }
-   
-   
-  
-   
-   /**
-   * logout current user
-   * This function is called from the "global_header" file
-   */
-   function logoutSuccess(response) {
-      google.script.run.withSuccessHandler(showPage).include(response,true);
-    }
-   
- 
   
   
   // Testing this - it may need to be deleted in the future if I don't use it
@@ -328,10 +368,10 @@ function refreshSelectElements(){
  *
  * return nothing
  */
- function customAlert_(iconType,message){
+ function customAlert_(iconType,message,title){
     Swal.fire({
       icon: iconType,
-      title: 'Oops...',
+      title: title ? title :'',
       text: message,
      // footer: '<a href>Why do I have this issue?</a>'
     })

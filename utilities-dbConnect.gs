@@ -107,11 +107,7 @@ var sheet = dbConn().getSheetByName(sheetName);
 
 
 
-// Client-side script calls this function to get the values to populate the batch list for the Batch management page
-function getBatchList(){
-  // Get data from batch sheet and stringify it
-  return JSON.stringify(getSheetData('query_BATCH_RECIPE_LIST'));
-}
+
 
 
 
@@ -168,52 +164,6 @@ batch: '123',
 }];
 
 
-// Return all table data for specified batch id
-function getBatchData(batchId){
-  
-  var output = {
-    id: batchId,
-    tableName: 'BATCH',
-    sheetName: 'table_BATCH',
-    data: getSheetData('table_BATCH'),
-    ingredientTable: getBatchIngredientData(batchId),
-    uiLists: getUiLists(),
-    lossTable:'',
-    blendTable:'',
-    fermentTable: testFermTable,
-  }
-  
-  return JSON.stringify(output);
-}
-
-
-
-
-// Return all table data for specified batch id
-function getRecipeData(recipeId){
-  var uiLists = getUiLists()
-  
-  var output = {
-    id: recipeId,
-    tableName: 'RECIPE',
-    sheetName: 'table_RECIPE',
-    data: getSheetData('table_RECIPE'),
-    tableData: getRecipeTableData(recipeId),
-    uiLists: uiLists,
-    }
-    
-  
-  return JSON.stringify(output);
-}
-
-
-
-
-
-function getUiLists(){
-  return getSheetData("UI_LISTS");
-}
-
 
 
 
@@ -230,74 +180,6 @@ function getLossTypeList(data){
 
 
 
-
-
-
-
-
-
-/**
-* getBatchIngredientData 
-*
-* Get ingredient/additive data for specified batch id
-*
-* @param batchNum {string} batch id to search for in range
-*
-* return {array}
-*/
-function getBatchIngredientData(batchNum){
-  var data = getSheetData("table_INGREDIENT_USAGE");
-  var header = data[0];
-  var batchIndex = header.indexOf("BATCH ID");
-  var batchId = batchNum.toString();
-  var values = [];
-  
-  // Add header to top of array
-  values.push(header);
-  
-  // Loop through ingredient table and add values to array that matching the batch id
-  for (var i=0;i<data.length;i++){
-    if (data[i][batchIndex].toString() === batchId){
-      values.push(data[i]);
-    }
-  }
-  return values;
-
-}
-
-
-
-
-
-
-/**
-* getRecipeTableData 
-*
-* Get ingredient/additive data for specified batch id
-*
-* @param batchNum {string} batch id to search for in range
-*
-* return {array}
-*/
-function getRecipeTableData(recipeId){
-  var data = getSheetData("table_RECIPE_DETAILS");
-  var header = data[0];
-  var recipeIdIndex = header.indexOf("RECIPE ID");
-  var strId = recipeId.toString();
-  var values = [];
-  
-  // Add header to top of array
-  values.push(header);
-  
-  // Loop through ingredient table and add values to array that matching the batch id
-  for (var i=0;i<data.length;i++){
-    if (data[i][recipeIdIndex].toString() === strId){
-      values.push(data[i]);
-    }
-  }
-  return values;
-
-}
 
 
 

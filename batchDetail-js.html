@@ -1,35 +1,4 @@
-// Row 695, create a new row in the loss table using the same function
-// This will require passing a variable that denotes the table
 
-
-
-/******** BATCH SPECIFIC VARIABLES *****/
-
-  
- /** 
- * The TABLES object contains the string id and element by id for each table in the batch file
- * This was done so that it is easier to find and change these variables (if necessary)
- */
- var TABLES = {
-    ingredient: {el: $('#batchDetail-ingredientTable'),
-                 id:'batchDetail-ingredientTable',
-                },
-    additive: {el: $('#batchDetail-additiveTable'),
-               id: 'batchDetail-additiveTable',
-              },
-    loss: {el: $('#batchDetail-lossTable'),
-           id: 'batchDetail-lossTable',
-          },
-    ferment: {el: $('#batchDetail-fermentTable'),
-              id: 'batchDetail-fermentTable', 
-             },
-    blend: {el: $('#batchDetail-blendTable'),
-            id: 'batchDetail-blendTable',
-           },
-  }
- 
- 
- 
  
   /*------------------------------------------------------------------------------------*/
   /*********************************** EVENT HANDLERS ***********************************/
@@ -40,10 +9,12 @@
 
  // Page load
  $(function() {
-      
-      refreshSelectElements();
-      // Fill the batch options list that is located at the top of the page
-      getBatchList();
+    
+    var id = memory_.loadedRecordId;
+    if (id) {
+      console.log(`The record "${id}" will be loaded`);
+      getBatchData(id);
+    }
       
       
       $('#showStarterDetails').click(function(){
@@ -54,58 +25,23 @@
           }
        })
        
-       createBatchSelectEvent();
-       createNewRowEventTrigger();
-       createOnChangeTrigger();
+    refreshSelectElements(); 
+    createNewRowEventTrigger();
+    createOnChangeTrigger();
      
   })
   
   
-  
- 
-
-
-
-/**
-* Batch select element on change event handler
-* This triggers when the user makes a selection from the batch drop-down menu
-* that is located a the top of the batch page
-*/
-function createBatchSelectEvent() {
-    $('#batchSelector').change(function() {
-      
-     // Get batch id from selection
-      var batchId = $('option:selected', this).attr('data-id');
-      
-         // show loader
-      $(".fileLoadingSpinner").show();
-      
-      // Hide batch information
-      $(".loadTable").hide();
-      
-      
-      // Put batch id into global div to be recalled quickly
-      // This should be put into a cache, but this method is easier within the GAS environment
-      setBatchIdInTemp(batchId);
-      
-      
-      // Fetch data from server
-      getBatchData(batchId);
-    });
-
-}
-
-
-
   /*-------------------------------------------------------------------------------------*/
   /***********************************    FUNCTIONS    ***********************************/
   /*-------------------------------------------------------------------------------------*/
 
 
 
-
-  
-  
+// Get batch data from server
+function getBatchData(recipeId){
+  google.script.run.withSuccessHandler(processPageData).getPageData(memory_.user.company,'batch',recipeId);
+}
   
   
   
@@ -129,204 +65,85 @@ function getBatchList(){
 
 
 
-// Fill options list for batch select element
-function fillBatchOptions(optionsArray){
-  var batchOptions;
-  
-  // If the array is an object, it is coming from the server
-  // Otherwise, it's a string with html options
-  if(typeof optionsArray !== 'object') 
-    batchOptions = convertOptionsArray(optionsArray,memory_.currentPage);
-   else 
-    batchOptions = optionsArray;
-  
-  // Append options to batch select element
-  fillHtmlSelect('#batchSelector',batchOptions);
-  
-  
-  // Show selector and get data from server if there is already a batch id selected
-  loadBatch();
-  
-  // Hide pre-loader
-  $("#indexLoader").hide();
-  
-  // Store batchOptions as a temporary variable
-  memory_.lists.batchOptions = batchOptions;
-}
-
-
-
-
-
-
-  
-// Load batch selector element
-// If necessary, load batch data for page
-function loadBatch(){
-
-  var batchId = setBatchSelectOption();
-
-    if (!batchId) return;
-    getBatchData(batchId);
-    
-    return;
-  
-  
-}
-
-
-
-
-/**
-* Gets the current batch id from the temporary storage object
-* and sets it as the selected option in the batch select element
-*
-* If there is no current batch id, returns undefined.
-*
-* returns {string} batch id
-*/
-function setBatchSelectOption(){
-   // Check if a batch id has already been used
-    // This will allow the user to navigate back and forth through pages 
-    // without having to re-select the batch
-    var batchId = getBatchId();
-   
-   
-    if (!batchId) {
-      return;
-    }
-  
-    // the batch id is also the elements id
-    var selectItem = $("option[data-id='" + batchId +"']");
-    
-    // Get index of batch id in batch select
-    var index = $("option").index(selectItem);
-    
-    // Get value of the option by it's index
-    var selectedValue = $("#batchSelector").children().eq(index).val();
-    
-    // Set value in select element
-    // Utilizes the bootstrap-select library to set the selected value
-    $('#batchSelector').selectpicker('val', selectedValue);
-    
-    return batchId;
-}
-
-
-
-
-// Get batch data from server
-function getBatchData(batchId){
-
-   //  var tableData = memory_.tables.batchDetail.tableData;
-  
-  // Not sure if I want to do this - for sure not right now
-  // If the table data is already available, load it
-  // This would mean that the updating tables needs to update this as well, which would get a little complicated
-  /*
-  //  if (tableData) {
-  //     initializeBatchTables(tableData);
-  //     return;
-  //  }
-  */
-  
-  google.script.run.withSuccessHandler(initializeBatchTables).getBatchData(batchId);
-}
-
-
-
-
- 
-// Get batch id from temporary holding function "memory_"
-function getBatchId(){
-   var batchId = memory_.currentBatchId;
-   return batchId ? batchId : false;
-}
-
-
-
-
-// Set batch id in custom attribute 
-// Custom attribute is located on the "index" page
-function setBatchIdInTemp(batchId){
-  memory_.currentBatchId = batchId;
-}
-  
- 
-
-
-/** 
-* Load UI fields and tables using data from server (load page)
-* This occurs after a batch is selected
-* or if a batch id was already selected and a user simply navigated away and back again
-* It would be faster to store the values in the cache, but
-* the old values would not be updated after a user made a change, so the data needs reloaded each time
-* (unless I can figure out a way to denote when a table value is changed, so I only have to update the values that were changed
-* 
-* Accepts a json object
-*/
-function initializeBatchTables(response){
-
-      var data;
-      
-          if (typeof response === 'string') {
-            // process server arrays
-            data = processBatchData(JSON.parse(response));
-          } else {
-            data = response;
-          }
-          
-           // Unhide div
-           // This needs to happen before data is loaded, otherwise the table doesn't load correctly
-          $(".loadTable").show();
-      
-      
-      loadTables(data);
-
-  // Hide loader
-  $(".fileLoadingSpinner").hide();
-
-}
-
-
-
-
-/**
-* LOAD DATA INTO TABLES
-*
-* Loop over the global TABLES object
-* Load the table data that is associated with the specified key
-*
-* NOTE: The keys of the "data" JSON object in the function initializeBatchTables should have the same name as the table ids
-*/
-function loadTables(data){
-
-      for (var key in TABLES) {
-          TABLES[key].el.bootstrapTable('destroy').bootstrapTable({data: data[key]});
-          
-          // If there is batch data, put the table data into a global temporary variable
-          // It should be stringified to match the data coming from the server
-          // which will always be stringified
-          memory_.tables.batchDetail.tableData = data;
-      }
-  
-}
-
-
-
-
-
-
-// Make table row editable
-// This function is not currently used
-// Instead of making the table editable
-// input elements are put into the table cells
-
-//function makeRowEditable(thisElem) {
-//  thisElem.prop('contenteditable', true).css({
-//    'background':'#E3F1F2',
-//    'color':'black',
-//    'font-weight': 'bold',
-//  });
+//// Fill options list for batch select element
+//function fillBatchOptions(optionsArray){
+//  var batchOptions;
+//  
+//  // If the array is an object, it is coming from the server
+//  // Otherwise, it's a string with html options
+//  if(typeof optionsArray !== 'object') 
+//    batchOptions = convertOptionsArray(optionsArray,memory_.activePage);
+//   else 
+//    batchOptions = optionsArray;
+//  
+//  // Append options to batch select element
+//  fillHtmlSelect('#batchSelector',batchOptions);
+//  
+//  
+//  // Show selector and get data from server if there is already a batch id selected
+//  loadBatch();
+//  
+//  // Hide pre-loader
+//  $("#indexLoader").hide();
+//  
+//  // Store batchOptions as a temporary variable
+//  memory_.lists.batchOptions = batchOptions;
 //}
-
+//
+//
+//
+//
+//
+//
+//  
+//// Load batch selector element
+//// If necessary, load batch data for page
+//function loadBatch(){
+//
+//  var batchId = setBatchSelectOption();
+//
+//    if (!batchId) return;
+//    getBatchData(batchId);
+//    
+//    return;
+//  
+//  
+//}
+//
+//
+//
+//
+///**
+//* Gets the current batch id from the temporary storage object
+//* and sets it as the selected option in the batch select element
+//*
+//* If there is no current batch id, returns undefined.
+//*
+//* returns {string} batch id
+//*/
+//function setBatchSelectOption(){
+//   // Check if a batch id has already been used
+//    // This will allow the user to navigate back and forth through pages 
+//    // without having to re-select the batch
+//    var batchId = getBatchId();
+//   
+//   
+//    if (!batchId) {
+//      return;
+//    }
+//  
+//    // the batch id is also the elements id
+//    var selectItem = $("option[data-id='" + batchId +"']");
+//    
+//    // Get index of batch id in batch select
+//    var index = $("option").index(selectItem);
+//    
+//    // Get value of the option by it's index
+//    var selectedValue = $("#batchSelector").children().eq(index).val();
+//    
+//    // Set value in select element
+//    // Utilizes the bootstrap-select library to set the selected value
+//    $('#batchSelector').selectpicker('val', selectedValue);
+//    
+//    return batchId;
+//}

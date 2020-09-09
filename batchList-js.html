@@ -1,0 +1,32 @@
+  $(function(){
+    $("#indexLoader").hide();
+    loadTables('loading');
+    getBatchList();
+    // Creates dblClick event for table
+    createDblClickEvent();
+   
+    
+  });
+  
+  
+  
+function getBatchList(){
+  // If the user has not refreshed the page
+  // The recipe list should still be in the temporary data variable
+   if (!memory_.lists.batchList) {
+     const isQuery = true;
+     google.script.run.withSuccessHandler(getBatchList_callback).getTableArray(memory_.user.company,'BATCH_RECIPE_LIST',isQuery);
+     return;
+   };
+   loadTables({table:memory_.lists.batchList}); // the "table" key is the same id of the table where these values go
+}
+
+/**
+* Callback for the getRecipeList function
+*/
+function getBatchList_callback(batchArray){
+  var data = getDataFromArray_(JSON.parse(batchArray).mainArray);
+  memory_.lists.batchList = data;
+  loadTables({table:data});// the "table" key is the same id of the table where these values go
+}
+

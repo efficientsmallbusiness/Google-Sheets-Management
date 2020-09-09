@@ -1,0 +1,30 @@
+ $(function(){
+     $("#indexLoader").hide();
+     loadTables('loading');
+    getRecipeList();
+   // Creates dblClick event for table
+   createDblClickEvent();
+    
+  });
+  
+  
+  
+function getRecipeList(){
+  // If the user has not refreshed the page
+  // The recipe list should still be in the temporary data variable
+   if (!memory_.lists.recipeList) {
+     google.script.run.withSuccessHandler(getRecipeList_callback).getTableArray(memory_.user.company,'recipe');
+     return;
+   };
+   loadTables({table:memory_.lists.recipeList}); // the "table" key is the same id of the table where these values go
+}
+
+/**
+* Callback for the getRecipeList function
+*/
+function getRecipeList_callback(recipeArray){
+  var data = getDataFromArray_(JSON.parse(recipeArray).mainArray);
+  memory_.lists.recipeList = data;
+  loadTables({table:data}); // the "table" key is the same id of the table where these values go
+}
+

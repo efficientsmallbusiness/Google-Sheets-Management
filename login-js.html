@@ -40,8 +40,7 @@
       
       // Add user's data to the temporary memory
       memory_.user = response.userData;
-      console.log(memory_.user);
-      google.script.run.withSuccessHandler(showPage).include(response.page,true);
+      getPage(response.initPage);
     }
     
  

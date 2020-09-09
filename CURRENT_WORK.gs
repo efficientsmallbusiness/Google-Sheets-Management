@@ -6,10 +6,21 @@
   And send a welcome email
 - If user validation ever returns null, log the user out
 
-
-User_.prototype.getDetails 
-This should cache the user's details for 1 hour
-
+- batchDetails page: 
+- include an update recipe button and a "back to batches list" button
+- make the recipe link work
+- When a new batch is created, prompt the user to select "from recipe" or "create new"
+  If "create new", make them enter a brief description [required], optionally a name, type of alc.
+  Then create a new recipe from those details, use default values if none exist
+  
+  Recipe list page
+  - Create new recipe button
+  
+  Recipe details page
+  - Create new recipe button and a "back to recipes list" button
+  
+  COLOR PALETTE GENERATOR
+  https://coolors.co/897c79-ffeaee-13c4a3-083d77-d9bbf9
 */
 
 /*
@@ -18,7 +29,7 @@ Everytime a user logs in or refreshes the page, their user properties are update
 So if their name is changed in the system, they will need to refresh their browser for changes to take effect.
 */
 
-function tt(){
+function testingUrlFetchApp(){
   const spreadsheetId = '18GrM5sSx3BsA_4lOT90z17i0OJMvktqDm6-ToV_5des';
   var sheetId = '0';
   var url = "https://docs.google.com/spreadsheets/d/" + spreadsheetId +

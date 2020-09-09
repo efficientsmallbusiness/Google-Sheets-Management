@@ -1,3 +1,41 @@
-<div>
-Batches go here
+<div class="container" >
+   <div class="row add-top-margin"> <!-- START DETAIL ROW -->
+      
+      <div class="col-12" style="margin-bottom:10px;">
+         <label class="sectionHeader">
+           <h3>BATCHES</h3> 
+         </label>
+         
+         <div class="float-right">
+          <button type="button" class="btn btn-primary " id="createNewBatchBtn" >New batch</button>   
+        </div>
+        
+         <span class="bottom-border"></span>
+       </div>
+      
+      <div class="col-12 ">
+        
+        
+        <table id="table"
+          class="listTableDblClk table-sm"
+          data-show-fullscreen="false"
+          data-show-columns="true"
+          data-show-columns-toggle-all="true"
+          data-detail-view="false"
+          data-height="460"
+          data-pagination="true"
+          data-search="true">
+          <caption>Batch list</caption>
+          <thead style="background-color:#13C4A3;color:white;">
+            <tr>
+              <th data-field="id" data-sortable="true" data-width="60">ID</th>
+              <th data-field="shortDescription" data-sortable="true" data-width="450">Description</th>
+              <th data-field="alcType" data-sortable="true">Type</th>
+              <th data-field="operate" data-formatter="listTableButtons" data-events="operateEvents" class="noEdit iconCol"></th>
+            </tr>
+          </thead>
+        </table>
+    
+    </div>
+  </div>
 </div>

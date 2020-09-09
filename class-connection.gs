@@ -8,7 +8,7 @@ var globalTemplate_ = (function (){
   var clientValues = {};
   clientValues.folderName = 'Meadery_Solutions_App';
   clientValues.production = {
-    id:'198vD7x9Yu0jCQzWwzBP4GqffEX-Jz71LhH9dke_8FVQ',
+    id:'198vD7x9Yu0jCQzWwzBP4GqffEX-Jz71LhH9dke_8FVQ', // The template production spreadsheet
     name:'meaderySolutions_production_db',
   };
   
@@ -32,13 +32,136 @@ var globalTemplate_ = (function (){
 })()
 
 
-function test_getClientInfo(){
-var response = conn_().getClientInfo({accessCode:'123456',name:'Artivem Mead Co.'});
 
-  Logger.log(response);
+function log_(value) {
+  SpreadsheetApp
+  .openById('198vD7x9Yu0jCQzWwzBP4GqffEX-Jz71LhH9dke_8FVQ')
+  .getSheetByName('ERROR_LOG')
+  .appendRow([new Date(),JSON.stringify(value)])
+}
+
+/**
+* Client-side script calls this function to get all the array values of the specified table
+* @param {string} tableName The table to get the array values of
+* @param {object} accessObject The object containing the client's access object and company name
+* @param {boolean} isQuery Determines if a table or query tab is retrieved
+* @return {2D array} 
+*/
+function getTableArray(accessObject,tableName,isQuery) {
+  const clientInfo = conn_().getStoredInfo(accessObject);
+  return JSON.stringify({mainArray:conn_(clientInfo.sheets.production).setTable(tableName,isQuery).getValuesArray()});
 }
 
 
+
+
+
+
+
+function getUiLists(){
+  return getTableArray("UI_LISTS");
+}
+
+function test_getTableArrayById(){
+  var d = getTableArray({accessCode:'1234567'},'recipe');
+  //recipe-additiveTable
+  Logger.log((d));
+}
+
+
+/**
+* Return all table data for specified batch id for both the primary table and the associated details table
+* EXAMPLE: 
+ - page = recipe
+ - recordId = 200B
+ - returns array from table_RECIPE where the column 'ID' = 200B
+           and an object from table_RECIPE_DETAILS where the column 'RECIPE ID' = 200B
+*
+* @param {object} accessObject The client's accessCode and company name
+* @param {string} table The main table to search in
+* @param {string} recordId [optional] The recordId to use
+* @return {object}
+*/
+var getPageData = function(accessObject,table,recordId){
+  const output = {};
+  output.subTable = {};
+  output.recordId = recordId;
+  const clientInfo = conn_().getStoredInfo(accessObject);
+  const conn = conn_(clientInfo.sheets.production);
+  // This will be processed on the client-side
+  const primaryTableArray = conn.setTable(table).getRecordById(recordId);
+  output.mainArray = primaryTableArray;
+  
+  if (recordId) {
+    // The subTable keys must match the associated table they are supposed to fill
+    // EX: 
+    // - <table id='batch-ingredientTable'></table>
+    // - subTable['batch-ingredientTable']
+    switch (table) {
+      case 'batch':
+        const splitBatchTable = separateIngredientTables_(getSubTableRecords_(conn,'batch_details',recordId,'batchId'));
+        output.subTable['batch-ingredientTable'] = splitBatchTable.ingredients;
+        output.subTable['batch-additiveTable'] = splitBatchTable.additives;
+        output.subTable['batch-lossTable'] = getSubTableRecords_(conn,'loss_details',recordId,'batchId');
+        output.subTable['batch-fermentTable'] = getSubTableRecords_(conn,'ferment_details',recordId,'batchId');
+        output.subTable['batch-blendTable'] = getSubTableRecords_(conn,'blend_details',recordId,'batchId');
+        break;
+      case 'recipe':
+        const splitRecipeTable = separateIngredientTables_(getSubTableRecords_(conn,'recipe_details',recordId,'recipeId'));
+        output.subTable['recipe-ingredientTable'] = splitRecipeTable.ingredients;
+        output.subTable['recipe-additiveTable'] = splitRecipeTable.additives;
+        break;
+      case 'inventory':
+        break;
+      case 'vessels':
+        break;
+      case 'aging':
+        break;
+      case 'schedule':
+        break;
+    }
+  }
+  
+  return JSON.stringify(output);
+}
+
+
+
+/**
+* Get table records of sub tables (The tables that hold details about the main table)
+* Returns the records of a "Details" table
+* @param {string} subTableName The table to search in
+* @param {string} searchId The foreign id to search for
+* @param {string} foreignCol The name of the foreign column to search in
+*/
+var getSubTableRecords_ = function(conn,subTableName,searchId,foreignCol) {
+    // This is processed on the server side, because this table will get huge and I don't want to send that large of an array to the client-side
+    const values = conn.setTable(subTableName).getValues().object;
+    return values ? values.filter(function(item){Logger.log(item);return item[foreignCol] == searchId}) : null;
+}
+
+
+
+/**
+* separate object values (specifically ingredient/additive types from the recipe and batch tables) 
+* @param {array} arrayOfObjects The details table for the batch 
+* @param {object} 
+*/
+var separateIngredientTables_ = function(arrayOfObjects) {
+  var ingredients = [];
+  var additives = [];
+  // Loop through array
+  for (var i=0;i<arrayOfObjects.length;i++) {
+    var valuesObject = arrayOfObjects[i];
+    // Loop through object to check values
+    Object.values(valuesObject).forEach(function(val) {
+      if (typeof val != 'string') return;
+      if (val.toLowerCase() == 'ingredient') ingredients.push(valuesObject);
+      else if (val.toLowerCase() == 'additive') additives.push(valuesObject);
+    });
+  }
+  return {ingredients:ingredients,additives:additives};
+}
 
 
 
@@ -48,16 +171,16 @@ var response = conn_().getClientInfo({accessCode:'123456',name:'Artivem Mead Co.
 * this is used the first time a client logs in
 * Their business name and accessCode must already exist in the Registered Client's spreadsheet
 */
-function createClient(){
+var test_createClient_ = function(){
   // Generate accessCode
   var accessCode = '123456';
   var activeUserEmail = 'micahmailand@gmail.com';
   var response = conn_().createClientAppDataObject(accessCode,activeUserEmail);
-  Logger.log(response);
+  Logger.log(response)
 }
 
 
-function getTableRecordById() {
+var test_getTableRecordById_ = function() {
   var conn2 = conn_('198vD7x9Yu0jCQzWwzBP4GqffEX-Jz71LhH9dke_8FVQ');
   var v2 = conn2.setTable('users').getRecordById('1');
   
@@ -202,11 +325,21 @@ dbConn_.prototype.getValues = function (columnHeadersRowIndex){
 }
 
 
+
+/**
+* Gets the dataRange of values
+* @return {array} Sheet datarange values
+*/
+dbConn_.prototype.getValuesArray = function (){
+  return this.getSheet_().getDataRange().getValues();
+}
+
+
 /**
 * Sets the sheet name with the "table_" prefix
 */
-dbConn_.prototype.setTable = function(tableName) {
-  const tablePrefix = 'table_';
+dbConn_.prototype.setTable = function(tableName,isQuery) {
+  const tablePrefix = !isQuery ? 'table_' : 'query_';
   this.setSheetName( tablePrefix + tableName.toUpperCase() );
   return this
 }
@@ -220,6 +353,7 @@ dbConn_.prototype.setTable = function(tableName) {
 */
 dbConn_.prototype.setSheetId = function(id) {
   this.sheetId = id;
+  this.sheet_ = null; // Reset the sheet
   return this;
 };
 
@@ -256,6 +390,7 @@ dbConn_.prototype.setSpreadsheetId = function(id) {
 */
 dbConn_.prototype.setSheetName = function(name) {
   this.sheetName = name;
+  this.sheet_ = null; // Reset the sheet
   return this;
 };
 
@@ -324,6 +459,15 @@ dbConn_.prototype.showHiddenRows = function(boolean) {
 
 
 
+/**
+* Gets the stored app data for the specified company
+* This can only be called after a user has successfully signed in
+* so the property store must exist
+* @param {object} accessObject 
+*/
+dbConn_.prototype.getStoredInfo = function(accessObject) {
+  return this.getStorage_('script').get(accessObject.accessCode);
+}
 
 /**
 * Checks if the client is active in the Meadery Solutions database

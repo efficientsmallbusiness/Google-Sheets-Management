@@ -9,16 +9,17 @@ font-family: 'Bowlby One SC', cursive;*/
 
 
 body { 
-  width: 100%; 
-  height: 100%; 
-  /*background: #ecf0f1;*/
+/*  width: 100%; 
+  height: 100%; */
+  background: #ecf0f1;
   color: #34495e;
-
+  padding-top:60px; /*Prevents the fixed navbar from hiding the top-most elements*/
 }
 
 
 label {
   white-space:nowrap;
+  margin-bottom:-10px; /* decrease the space between the label and the input element*/
 }
 
 /* Header links are automatically hidden and show if the page is NOT "login" */
@@ -27,10 +28,27 @@ label {
 }
 
 
+div.container-width{
+  margin-left:80px;
+  margin-right:80px;
+}
+
 /* Disables <a> elements when "disabledLink is a class*/
 a.disabledLink {
   pointer-events: none;
   cursor: default;
+}
+
+
+/*The white table background creates contrast with the grey page background*/
+table {
+  table-layout: fixed;
+  background:white;
+}
+
+thead {
+  margin-bottom: -5px;
+  margin-top: -5px;
 }
 
 /* Keeps table cell contents from overflowing within a table*/
@@ -133,7 +151,7 @@ td input{
 
 /* UNCOMMENT */
 .loadTable{
-  display: none;
+ /* display: none;*/
 }
 
 .loadingBtn {

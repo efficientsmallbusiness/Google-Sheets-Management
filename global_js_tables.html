@@ -12,51 +12,39 @@
 
   /** 
   * Table click events
-  * 
   * This is used to trigger events when a table is clicked on
-  *
-  * 
   * Currenty, it handles edit/delete/confirm/cancel actions
   * but it could be set to handle different things
   */
   // This must exist if the table buttons exist
   window.operateEvents = {
-    // Check if table item with "edit" class was clicked
+    // Table item with "open" class was clicked
+    'click .open': function (e, value, row, index) {
+       tableOpenClick(this, e, value, row, index);
+    },
+    // Table item with "edit" class was clicked
     'click .edit': function (e, value, row, index) {
-    
        tableEditClick(this, e, value, row, index);
-      
     },
-     // If table item with a "saveIcon" class was clicked
+     // Table item with a "saveIcon" class was clicked
     'click .confirmSave': function (e, value, row, index) {
-      
         tableConfirmSaveClick(this, e, value, row, index);
-        
     },
-    // If table item with a "remove" class was clicked
+    // Table item with a "remove" class was clicked
     'click .remove': function (e, value, row, index) {
-        
       tableRemoveClick(this, e, value, row, index);
-      
     },
-    // If table item with a "confirmDelete" class was clicked
+    // Table item with a "confirmDelete" class was clicked
     'click .confirmDelete': function (e, value, row, index) {
-      
         tableConfirmDeleteClick(this, e, value, row, index);
-     
     },
-    // If table item with a "cancelDelete" class was clicked
+    // Table item with a "cancelDelete" class was clicked
     'click .cancelDelete': function (e, value, row, index) {
-       
        tableCancelDeleteClick(this, e, value, row, index);
-       
     },
-    // If table item with a "view" class was clicked
+    // Table item with a "view" class was clicked
     'click .view': function (e, value, row, index) {
-       
        tableViewClick(this, e, value, row, index);
-       
-       
     }
     
   }
@@ -89,7 +77,15 @@
 
 
   
-  
+  /**
+ * Creates a dblClick event for a bootstrap table
+ */
+ function createDblClickEvent() {
+   $('.listTableDblClk').off('dbl-click-row.bs.table').on('dbl-click-row.bs.table', function (e, row, $element) {
+         const id = row.id;
+         getPage( pageToLoad(id) ,id);
+      });
+ }
   
   
   /**
@@ -192,7 +188,7 @@
   // Check if ui lists have been loaded. If not, get them from the server
   function uiListExists(listName){
     if (memory_.lists[listName]) return;
-    google.script.run.withSuccessHandler(separateUiListsAndConvertToHtml).getUiLists();
+    google.script.run.withSuccessHandler(separateUiListsAndConvertToHtml).getPageData(memory_.user.company,"UI_LISTS");
   }
  
   
@@ -202,10 +198,8 @@
   /**
   * Add a new row to a table
   * This functioned is a callback function for "newTableRowEvent"
-  *
   * @param responseObject {object} Stringified JSON object passed from server-side
-  *
-  * return nothing
+  * @return none
   */
   function newTableRow(responseObject){
     var obj = JSON.parse(responseObject);
@@ -241,8 +235,6 @@
     
     // Row id needs to be 0 to insert a new row at the top of the table
     rowId = 0;
-     
-     
     // Get the table object by id
     // The id is stored in the object variable
     var table = $(obj.tableId);
@@ -255,7 +247,6 @@
     
     // Set table view to top
     table.bootstrapTable('scrollTo', 'top');
-    
     // Get the element of the clicked button
     var btnId = obj.btnId;
     
@@ -265,10 +256,6 @@
   }  
   
   
-  
-
-
-
 
   /**
   * Create table icons
@@ -277,11 +264,11 @@
    function operateFormatter(value, row, index) {
     return [
       '<div class="buttonDiv">',
-      '<a class="edit normalIcon" href="javascript:void(0)" title="Edit"><i class="fa fa-pencil"></i></a>',
-      '<a class="remove normalIcon" href="javascript:void(0)" title="Delete"><i class="fa fa-trash text-secondary" style="margin-left:25px;"></i></a>',
-      '<a class="confirmSave saveIcon" href="javascript:void(0)" title="Save"><i class="fa fa-check text-success"></i></a>',
-      '<a class="confirmDelete deletingIcon" href="javascript:void(0)" title="Confirm delete" ><i class="fa fa-check text-success"></i></a>',
-      '<a class="cancelDelete deletingIcon" href="javascript:void(0)" title="Cancel delete" ><i class="fa fa-ban text-danger" style="margin-left:25px;"></i></a>',
+        '<a class="edit normalIcon" href="javascript:void(0)" title="Edit"><i class="fa fa-pencil"></i></a>',
+        '<a class="remove normalIcon" href="javascript:void(0)" title="Delete"><i class="fa fa-trash text-secondary" style="margin-left:25px;"></i></a>',
+        '<a class="confirmSave saveIcon" href="javascript:void(0)" title="Save"><i class="fa fa-check text-success"></i></a>',
+        '<a class="confirmDelete deletingIcon" href="javascript:void(0)" title="Confirm delete" ><i class="fa fa-check text-success"></i></a>',
+        '<a class="cancelDelete deletingIcon" href="javascript:void(0)" title="Cancel delete" ><i class="fa fa-ban text-danger" style="margin-left:25px;"></i></a>',
       '</div>'
     ].join('')
   }
@@ -297,27 +284,33 @@
   function operateEditFormatter(value, row, index) {
     return [
       '<div class="buttonDiv">',
-      '<a href="#" class="view text-primary normalIcon" title="View details"><i class="fa fa-list"></i></a>',
-      '<a class="remove normalIcon" href="javascript:void(0)" title="Delete"><i class="fa fa-trash text-secondary" style="margin-left:25px;"></i></a>',
-      '<a class="confirmDelete deletingIcon" href="javascript:void(0)" title="Confirm delete" ><i class="fa fa-check text-success"></i></a>',
-      '<a class="cancelDelete deletingIcon" href="javascript:void(0)" title="Cancel delete" ><i class="fa fa-ban text-danger" style="margin-left:25px;"></i></a>',
+        '<a href="#" class="view text-primary normalIcon" title="View details"><i class="fa fa-list"></i></a>',
+        '<a class="remove normalIcon" href="javascript:void(0)" title="Delete"><i class="fa fa-trash text-secondary" style="margin-left:25px;"></i></a>',
+        '<a class="confirmDelete deletingIcon" href="javascript:void(0)" title="Confirm delete" ><i class="fa fa-check text-success"></i></a>',
+        '<a class="cancelDelete deletingIcon" href="javascript:void(0)" title="Cancel delete" ><i class="fa fa-ban text-danger" style="margin-left:25px;"></i></a>',
       '</div>'
     ].join('')
   }
   
   
-  
-  /**
-  * Reformats the entered date within a table
-  */
-  function dateFormatter(value) {
-    var dt = new Date(value);
-    return dt.getMonth( ) +'/'+ dt.getDate( ) + '/' +dt.getFullYear( );
+  function listTableButtons(value, row, index) {
+    return [
+      '<div class="buttonDiv">',
+        '<a href="#" class="open text-primary normalIcon" title="Open">View</a>',
+       '</div>'
+    ].join('')
   }
   
   
+  /**
+  * Reformats the entered date within a table
+  * @return {date} formatted date value
+  */
+  function dateFormatter(value) {
+    var dt = new Date(value);
+    return value ? dt.getMonth( ) +'/'+ dt.getDate( ) + '/' +dt.getFullYear( ) : '';
+  }
   
-
 
 
   /**
@@ -355,10 +348,6 @@
   }
 
 
-
-
-
-
   /**
   * Put a text input into table cell
   */
@@ -370,9 +359,6 @@
      // Insert current cell value into input field
      inputElem.val(cellValue);
   }
-  
-
-
 
 
   /**
@@ -399,7 +385,7 @@
   function getDatabaseTableName(tableId,id,page){
       
       if (id === TABLES.ingredient.id || tableId === TABLES.additive.id) {
-          // If the page is "recipe", then give a different table name
+          // If the page is "recipeDetail", then give a different table name
           if (page === 'recipe') return 'table_RECIPE_DETAILS';
           return 'table_INGREDIENT_USAGE';
       }
@@ -419,7 +405,6 @@
   // Create onChange trigger to change unit of measure based on the table drop-down selection
   // Get uom on select change and insert it into the correct column
   function changeUom(tableElement){
-    
     // Get header column elements
     var colElems = tableElement[0].$el[0].rows[0].children;
     
@@ -435,12 +420,10 @@
       $.each(colElems,function(ind,el){
         // Get object key / data-field
         var key = $(el).attr('data-field');
-       
         // If the column data-field is "uom"
         if (key === 'uom') {
           // Get the row cell with the matching index of the uom column
           var cell = rowCells[ind];
-          
           // Insert uom from the selected drop-down menu
           $(cell).text(uom);
           
@@ -477,12 +460,30 @@
           
         };
       });
-      
     });
-    
   }
   
   
+  
+  function tableOpenClick(th, e, value, row, index) {
+    var table = $(th)[0].$el;
+    var rowElem = table[0].rows[index+1];// Add 1 to the index to get the current row, because the header is index 0
+    var colElems = table[0].rows[0].children;// Header row columns
+    var id;
+    
+    $.each($(rowElem).children(),function (i) {
+      const cellValue = $(this).text();
+      const headerTitle = colElems[i].childNodes[0].textContent; // Gets the header value
+       if (headerTitle == 'ID') {
+         id = cellValue;
+      }
+     });
+    
+    getPage( pageToLoad(id) ,id);
+  }
+  
+  
+ 
   
   
   /**
@@ -491,15 +492,13 @@
   function tableEditClick(th, e, value, row, index) {
         var ths = $(th);
         var table = ths[0].$el;
-       
         // Add 1 to the index to get the current row, because the header is index 0
         var rowElem = table[0].rows[index+1];
-        
         // Header row columns
         var colElems = table[0].rows[0].children;
-        
         // Div containing the edit/delete icons
         var iconDiv = $(e.target).parent().parent();
+        
         // Center icon, so the save icon is in the middle
         iconDiv.css( "text-align", "center" )
         // Show save icon
@@ -509,23 +508,16 @@
       
         // Get all td (row cells) elements of tr (table row)
         var cells = $(rowElem).find('td');
-        
-        
         // Loop through row columns and make them editable
         cells.each (function(ind,cell) {
             
             // this
             var t = $(this);
-            
             // Current cell value
             var cellValue = t.text();
-            
             // Get the list of classes from the th element being looped over
             var classes = colElems[ind].classList;
-            
-            
             // Determine if cell needs an element inserted
-            
             
             // Check if current column index is editable
             if (!classes.contains('noEdit')) {
@@ -534,36 +526,27 @@
               if (classes.contains('ingredientSelect')){
                   // Create select element and insert cell value as selected item
                   addSelectToCell(t,cellValue,'inventory');
-                  
-                  
                   // Change the UoM of the adjacent cell
                   changeUom(ths);
               }
-              
               // Check if a loss select box needs added
               else if (classes.contains('lossSelect')){
                   // Create select element and insert cell value as selected item
                   addSelectToCell(t,cellValue,'loss');
               }
-              
-              
               // Check if a batch select box needs added
               else if (classes.contains('batchSelect')){
                   // Create select element and insert cell value as selected item
                   addSelectToCell(t,cellValue,'batch');
               }
-              
               // Check if a number input element needs added
               else if (classes.contains('numberInput')){
                 addNumberInput(t,cellValue);
               }
-              
               // Check if a text input element needs added
               else if (classes.contains('textInput')){
                 addTextInput(t,cellValue);
               }
-              
-             
               // Check if a date input element needs added
               else if (classes.contains('dateInput')){
                 addDateInput(t,cellValue);
@@ -574,7 +557,6 @@
               // over the top of the cell, so the cell does not need to be editable
              // makeRowEditable(t);
             };
-            
         });  
    }
    
@@ -586,7 +568,12 @@
   * This funcation handles the tasks when the confirmSave icon is selected on a table
   */
    function tableConfirmSaveClick(th, e, value, row, index) {
-   
+       // this could be useful for updating individual table rows
+       // https://examples.bootstrap-table.com/index.html#methods/update-by-unique-id.html
+        //or this
+        // $table.bootstrapTable('updateCellByUniqueId', {id: 3, field: 'name', value: 'Updated Name'}).
+        
+        
         // this
         var ths = $(th);
         // Add 1 to the index to get the current row, because the header is index 0
@@ -599,13 +586,10 @@
         
         // Hide save icon
         $(e.target).parent().parent().children(".saveIcon").hide();
-        
         // Show normal icons
         var normalIcons = $(e.target).parent().parent().children(".normalIcon").show();
-      
         // Header row columns
         var colElems = ths[0].$el[0].rows[0].children;
-        
         // Get all td elements of tr
         var cells = $(rowElem).find('td');
         
@@ -642,10 +626,8 @@
         
         // Add table name to row object
         row.dbName = databaseTable;
-      
         // Denote if this row should be updated
         row.isUpdate = true;
-        
         // Add the table row index and table id, so the "isNew" value can be removed after the row is saved to the server
         row.tableIndex = index;
         row.tableId = tableId;
@@ -679,25 +661,17 @@
       * This funcation handles the tasks when the remove icon is selected on a table
       */
       function tableRemoveClick(th, e, value, row, index) {
-      
         // this
         var ths = $(th);
         // Add 1 to the index to get the current row, because the header is index 0
         var rowElem = ths[0].$el[0].rows[index+1];
-        
         var iconDiv = $(e.target).parent().parent()
         
         // Show confirm/cancel delete icons
         iconDiv.children(".deletingIcon").show();
-        
         // Hide edit/Delete icons
         iconDiv.children(".normalIcon").hide();
       }
-  
-  
-  
-  
-  
   
   
       /**
@@ -707,14 +681,11 @@
      
        // this
        var ths = $(th);
-       
         var iconDiv = $(e.target).parent().parent();
         // Hide confirm/cancel delete icons
          iconDiv.children(".deletingIcon").hide();
-        
         // Show edit/delete icons
         iconDiv.children(".normalIcon").show();
-        
         var thisTable = ths[0].$el;
       
         // Determine the database table name for the specific row
@@ -726,18 +697,14 @@
         
         // Add table name to row object
         row.dbName = databaseTable;
-        
         // Denote if this item should be deleted
         row.isDelete = true;
         row.tableId = tableId;
-        
         // Remove table row
         thisTable.bootstrapTable('remove', {
           field: 'id',
           values: [row.id]
         })
-        
-        
         
         console.log('delete confirmed');
         console.log('Check for row id, batch id, and table name');
@@ -749,42 +716,28 @@
 
 
 
-
-
-
       /**
       * This funcation handles the tasks when the cancelDelete icon is selected on a table
       */
       function tableCancelDeleteClick(th, e, value, row, index) {
-         
          // this
          var ths = $(th);
-         
          var iconDiv = $(e.target).parent().parent();
-         
          // Add 1 to the index to get the current row, because the header is index 0
         var rowElem = ths[0].$el[0].rows[index+1];
         
         $(rowElem).removeAttr("style");
-        
          // Hide confirm/cancel delete icons
         iconDiv.children(".deletingIcon").hide();
-        
         // Show edit/delete icons
         iconDiv.children(".normalIcon").show();
       }
-
-
-
 
 
     /**
     * This funcation handles the tasks when the view icon is selected on a table
     */
     function tableViewClick(ths, e, value, row, index) {
-       // Put row values into modal
-      // $('#fermentDetails').html(JSON.stringify(row));
-       
        // Clear fillable modal elements
        $('[data-ferment-modal-id]').val(''); 
        
@@ -809,7 +762,6 @@
        
        /** 
        * Open the modal dialog
-       *
        * The modal can also be opened using html data attributes instead of JS
        * EXAMPLE: '<a href="#" data-toggle="modal" data-target="#detailsModal">Open</a>' OR '<button data-backdrop="static" data-keyboard="false" data-toggle="modal" data-target="#detailsModal">Open</button>'
        *
@@ -829,8 +781,6 @@
     *
     * @param td {DOM element} 'td' element within a table
     * @param classes {DOM element array} JQUERY classlist
-    *
-    * returns nothing
     */
      function updateTableCell(td,classes){
             var textValue = '';
@@ -884,9 +834,6 @@
         
     }
     
-  
-
-
 
   // Alert user that a save attempt failed when updating a table
   function rowSavingError(){

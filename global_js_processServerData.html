@@ -1,137 +1,5 @@
 <script>
 
-
-/**
-* Converts batch table array to HTML select optins
-*
-* this function is used for recipe and batch select dropdown menus
-*/
-function convertOptionsArray(optionsArray,fileName){
-  var data = JSON.parse(optionsArray);
-  var columnName = fileName.toUpperCase();
-  
-  
-  var hdr = data[0];
-  var recordNumberInd = hdr.indexOf(columnName+" ID"); // This will be the batch or recipe id
-  var descriptionInd = hdr.indexOf('SHORT DESCRIPTION'); // This is always the recipe descriptino
-  var nameInd = hdr.indexOf('RECIPE NAME');
-  var alcTypeInd = hdr.indexOf('ALC TYPE');
-  
-  var values = data.slice(1);
-  
-  // Creates option elements from array
-  return createHtmlSelectItem(values,recordNumberInd,descriptionInd,nameInd,alcTypeInd,columnName);
-}
-
-
-
-
-/**
-* Creates an HTML select string using a JSON array
-* The array comes from the function "getBatchMenuOptions"
-* It contains values for ingredients or recipes
-*
-* @param values {array} Array of ingredient/recipe values
-* @param recordNumberInd {int} Array index of the record number/id
-* @param descriptionInd {int} Array index of the recipe description
-* @param nameInd {int} Array index of the recipe name
-* @param alcTypeInd {int} Array index of the recipe's alcohol type
-* @param columnName {string} The name of the column that the record number was pulled from and the name to use for the "New" select option
-*
-* returns {string} An HTML string contiaining select "<option>"'s
-*/
-function createHtmlSelectItem(values,recordNumberInd,descriptionInd,nameInd,alcTypeInd,columnName){
-  var html = [];
-  
-  // If this is a recipe
-  // Put a "NEW" record option at the top of the dropdown menu
-  if (columnName === 'RECIPE') 
-      html.push('<option value="new" class="text-center" data-id="newRecipe">*** NEW '+columnName+' ***</option>'+
-                 '<option data-divider="true"></option>');
-             
-   
-  for (var i=0;i<values.length;i++){
-    var recordNumber = values[i][recordNumberInd];
-    
-    // If there is no record number, then skip to the next loop
-    if (!recordNumber) continue;
-    
-    // If there is a recipe name use it in the search title
-    // Search title format: 
-    // batchId : alcType : recipeName : shortDescription
-    // Example: B11:MEAD:Blue Jay Berry:blueberry and vanilla
-    var searchTitle = "";
-    if (values[i][nameInd] !== '') {
-      searchTitle = values[i][recordNumberInd]+": "+values[i][nameInd]+': '+ values[i][descriptionInd]}
-      else {
-      searchTitle = values[i][recordNumberInd]+": "+values[i][descriptionInd]};
-      
-    // Fill the html array with HTML select options
-    // Make the batch id the element id
-    html.push('<option data-id="'+values[i][recordNumberInd]+'">' + searchTitle + '</option>');
-  }
-  
-  return html;
-}
-
-
-
-
-/*
-* Process the data for the batch management page
-*
-* The object key names must match the naming theme of the table ids
-* The naming theme is used to populate the dropdown menus within tables in the "batch-js" file.
-*
-* Examples:
-* DO:
-* <table id="fermentTable"></table>
-* object = {ferment: 'myJSONObject'}
-*
-* DON'T:
-* <table id="fermTable"></table>
-* object = {ferment: 'myJSONObject'}
-*
-* @param serverObject {object} JSON object containing table data 
-*
-* Return table object arrays and HTML string 
-*/
-function processBatchData(serverObject){
-  // Convert ingredient array to object then separate object values by ingredients/additives
-  var obj = getDataFromArray_(serverObject.ingredientTable);
-  var ingrData = separateObjectValues(obj);
-  var lists = separateUiListsAndConvertToHtml(serverObject.uiLists);
-  
-  // Get the row from recipe array
-  var batchRowData = getRowFromArrayById(serverObject);
-  // Convert the array into a JSON object
-  var batchObject = getDataFromArray_(batchRowData);
-  
-  // These will need processed because they contain arrays instead of objects
-  var lossTable = serverObject.lossTable;
-  var fermentTable = serverObject.fermentTable;
-  var blendTable = serverObject.blendTable;
-  
-  // Store spreadsheet tab name
-  memory_.tables.batchDetail.sheetName = serverObject.sheetName;
- 
- // Load form fields
-  loadFormFields(batchObject[0]);
- 
-  return {ingredient: ingrData.ingredients,
-          additive: ingrData.additives,
-          loss: lossTable,
-          ferment: fermentTable,
-          blend: blendTable,
-          batchList: memory_.lists.batch,
-         }
-  
-}
-
-
-
-
-
 /*
 * Process the data for the recipe management page
 * Return table object arrays and HTML string 
@@ -147,45 +15,22 @@ function processBatchData(serverObject){
 * DON'T:
 * <table id="fermTable"></table>
 * object = {ferment: 'myJSONObject'}
-*
 * @param serverObject {object} JSON object containing table data 
-*
-* Return table object arrays and HTML string 
 */
-function processRecipeData(serverResponse){
-   var serverObject = JSON.parse(serverResponse);
-  
-  // Convert ingredient array to object then separate object values by ingredients/additives
-  var tableObj = getDataFromArray_(serverObject.tableData);
-  var ingrData = separateObjectValues(tableObj);
-  var lists = separateUiListsAndConvertToHtml(serverObject.uiLists);
- 
-  // Get the row from recipe array
-  var recipeRowData = getRowFromArrayById(serverObject);
-  // Convert the array into a JSON object
-  var recipeObject = getDataFromArray_(recipeRowData);
- 
-  // Store spreadsheet tab name
-  memory_.tables.recipe.sheetName = serverObject.sheetName;
-  
-  
-  var tableData = {ingredient: ingrData.ingredients,
-                    additive: ingrData.additives,
-                   };
-  
-  
-  
+var processPageData =function(serverResponse){
+  var serverObject = JSON.parse(serverResponse);
+ // var pageObject = getDataFromArray_(serverObject.mainArray).filter(function(item){return item.id == serverObject.recordId})[0];
   // Load form fields
-  loadFormFields(recipeObject[0]);
+  loadFormFields(serverObject.mainArray);
   
+  if (serverObject.subTable) {
+    // Load table data if available
+    loadTables(serverObject.subTable);
+  }
   // hide loading spinner
   $(".fileLoadingSpinner").hide();
-  // Load table data
-  loadTables(tableData);
-  
-  return 
-       
 }
+
 
 
 
@@ -195,24 +40,21 @@ function processRecipeData(serverResponse){
 * @param object {object} JSON object of spreadsheet data
 */
 function loadFormFields(object){
-
   // Loop through each form element
-  $('.form-control').each(function(){
-     var t = $(this);
-     var elemId = t.attr('id');
-     var value = object[elemId];
-     var elemType = t.attr('type');
+  $('.form-control').each(function(i,e){
+     let el = $(e);
+     let elemId = el.attr('id');
+     let value = object[elemId];
+     let elemType = el.attr('type');
+     let classes = el.attr('class');
+   
+     if (elemType === 'date') value = formatDate(value);
      
-     if (elemId) {
-         if (elemType === 'date') 
-             t.val(formatDate(value));
-         
-         else if (elemType === 'link')
-             t.html(value);
-         else 
-             t.val(value);
-         
+     if (value) { 
+         if (elemType === 'link') el.html(value);
+         else el.val(value);
      }
+     
    });
    
     // Refresh select elements
@@ -220,6 +62,48 @@ function loadFormFields(object){
 }
 
 
+
+
+
+/**
+* LOAD DATA INTO TABLES
+*
+* Loop over the global TABLES object
+* Load the table data that is associated with the specified key
+*
+* NOTE: The keys of the "data" JSON object in the function initializeBatchTables should have the same name as the table ids
+*/
+function loadTables(tablesObject){
+
+  var tables = $('table');
+  
+  if (tablesObject == 'new') {
+   tables.each(function(i,tbl){
+      loadTable($(tbl),'');
+    });
+  } else if (tablesObject == 'loading') {
+    tables.each(function(i,tbl){
+      // If there is an issue with this in the future, 
+      // the loading text can be manually stopped with "$table.bootstrapTable('hideLoading')"
+      $(tbl).bootstrapTable({data: ''}).bootstrapTable('showLoading'); 
+    });
+    
+  } else {
+    tables.each(function(i,tbl){
+      if (tablesObject[tbl.id]) {
+        loadTable($(tbl),tablesObject[tbl.id]);
+      }
+    });
+  }
+
+}
+
+
+
+
+var loadTable = function(el,object) {
+  el.bootstrapTable('destroy').bootstrapTable({data: object});
+}
 
 
 
@@ -237,185 +121,185 @@ function loadFormFields(object){
 
 
 
-
-
-
-
-/**
-*
-* @param array {array} Spreadsheet data in a 2d array
-*
-* return {object} Objects containing string HTML options
-*/
-function separateUiListsAndConvertToHtml(array){
-  var header = array[0];
-  var lossTypeIndex = header.indexOf('LOSS TYPE');
-  var itemNameIndex = header.indexOf('ITEM');
-  var itemTypeIndex = header.indexOf('ITEM TYPE');
-  var itemQtyIndex = header.indexOf('ITEM QTY');
-  var itemUomIndex = header.indexOf('ITEM UOM');
-
-  
-  var lossHtmlOptions = [];
-  var itemHtmlOptions = [];
-  
-  for (var i=0;i<array.length;i++){
-   
-    var lossType = array[i][lossTypeIndex];
-    var itemName = array[i][itemNameIndex];
-    
-    // If the loss type is not empty, add the select option
-    if (lossType !== '') {
-      lossHtmlOptions.push('<option value="'+lossType+'">'+lossType+'</option>');
-    }
-    
-    // If the item name is not empty, create the select option
-    // The format is: <option value="Honey" data-uom="gal">Honey: 120 gal</option><option value="Hops" data-uom="g">Hops: 1300 g</option>
-    // The data-uom attribute is used to change the uom in the ingredient/additive tables
-    
-    if (itemName !== '') {
-    
-    itemHtmlOptions.push('<option value="'+itemName+'" data-uom="'+array[i][itemUomIndex]+'" >'+itemName+': '+array[i][itemQtyIndex]+' '+array[i][itemUomIndex]+'</option>');
-    }
-    
- }
- 
- var outputLoss = lossHtmlOptions.join('');
- var outputInventory = itemHtmlOptions.join('');
- 
- // Add lists to temporary storage object
- memory_.lists.loss = outputLoss;
- memory_.lists.inventory = outputInventory;
- 
- return {loss: outputLoss,
-   inventoryItems: outputInventory,
- }
- 
-  
-}
-
-
-
-
-
-
-/**
-* getDataById
-*
-* @param tableName {string} The table that we're getting data by id because the table name is used in the "ID" name. This will be either recipe or batch
-* @param data {array} 2D array from server
-* @param id {string} ID to search for in array
-*
-* return {array} 1D array for the specified row
-*/
-function getRowFromArrayById(serverObject){
-  var data = serverObject.data;
-  var header = data[0];
-  var idIndex = header.indexOf(serverObject.tableName + ' ID');
-  var id = serverObject.id.toString();
-  var recipeData = [];
-  
-  // Put header at top of array, so it can be converted to an object
-  recipeData.push(header);
-  
-  for (var i=0;i<data.length;i++) {
-    // Get the recipe that matches the input recipe id
-    if (data[i][idIndex] === id){
-      recipeData.push(data[i]);
-      break;
-    }
-  }
-  
-  return recipeData;
-}
-
-
-
-
-
-
-function getLossTypeList(data){
-  var header = data[0];
-  var lossTypeIndex = header.indexOf('LOSS TYPE');
-  
-  return data
-  .map(function(val,index){if (val) {if (index > 0) {return val[lossTypeIndex];}}})
-  .filter(function(e) {return e}); // Remove blanks
-}
-
-
-
-
-
-// separate object values (specifically ingredient/additive types from the ingredients table) based on object value
-function separateObjectValues(arrayOfObjects) {
-  var ingredients = [];
-  var additives = [];
-  
-  // Loop through array
-  for (var i=0;i<arrayOfObjects.length;i++) {
-    var valuesObject = arrayOfObjects[i];
-    
-    var arr = Object.values(valuesObject);
-    
-    // Loop through object to check values
-    for (var j in arr) {
-    var val = arr[j];
-    
-      if (val === 'ingredient')
-        ingredients.push(valuesObject);
-        
-      else if (val === 'additive')
-          additives.push(valuesObject);
-          
-    }
-  }
-  return {ingredients:ingredients,
-          additives:additives
-          };
-}
-
-
-
-
-  
- /**
- * Add new batch id to the temporary storage, so it is loaded when the batch page is loaded
- *
- * This function needs to be in this file, because of a workaround using apps script
- * It won't allow the page to be dynamically loaded with the "<" symbol. Unless it's combined with ">" 
- *
- * @param batchId {string} batch id returned from the server
- */
- function updateCurrentBatch(batchId){
-     // Set the current batch id
-     memory_.currentBatchId = batchId;
-
- }
- 
- 
- 
- 
- 
- /**
- * Add new recipe id option to recipe select element 
- * and make this new number the active selection
- *
- * This function needs to be in this file, because of a work around using apps script
- * It won't allow the page to be dynamically loaded with the "<" symbol. Unless it's combined with ">" 
- *
- * @param recipeId {string} Recipe id returned from the server
- */
- function updateRecipeSelector(recipeId){
-     var selectOption = '<option data-id="'+recipeId+'" selected="">'+recipeId+'</option>';
- 
-     $("#recipeSelector").append(selectOption);
-     $("#recipeSelector").selectpicker("refresh");
-     
-     // Update the current record id
-     // Put the current recipe id into temporary storage
-      memory_.currentRecipeId = recipeId;
- }
+///**
+//* Converts batch table array to HTML select optins
+//*
+//* this function is used for recipe and batch select dropdown menus
+//*/
+//function convertOptionsArray(optionsArray,fileName){
+//  var data = JSON.parse(optionsArray);
+//  var columnName = fileName.toUpperCase();
+//  
+//  
+//  var hdr = data[0];
+//  var recordNumberInd = hdr.indexOf(columnName+" ID"); // This will be the batch or recipe id
+//  var descriptionInd = hdr.indexOf('SHORT DESCRIPTION'); // This is always the recipe descriptino
+//  var nameInd = hdr.indexOf('RECIPE NAME');
+//  var alcTypeInd = hdr.indexOf('ALC TYPE');
+//  
+//  var values = data.slice(1);
+//  
+//  // Creates option elements from array
+//  return createHtmlSelectItem(values,recordNumberInd,descriptionInd,nameInd,alcTypeInd,columnName);
+//}
+//
+//
+//
+//
+///**
+//* Creates an HTML select string using a JSON array
+//* The array comes from the function "getBatchMenuOptions"
+//* It contains values for ingredients or recipes
+//*
+//* @param values {array} Array of ingredient/recipe values
+//* @param recordNumberInd {int} Array index of the record number/id
+//* @param descriptionInd {int} Array index of the recipe description
+//* @param nameInd {int} Array index of the recipe name
+//* @param alcTypeInd {int} Array index of the recipe's alcohol type
+//* @param columnName {string} The name of the column that the record number was pulled from and the name to use for the "New" select option
+//*
+//* returns {string} An HTML string contiaining select "<option>"'s
+//*/
+//function createHtmlSelectItem(values,recordNumberInd,descriptionInd,nameInd,alcTypeInd,columnName){
+//  var html = [];
+//  
+//  // If this is a recipe
+//  // Put a "NEW" record option at the top of the dropdown menu
+//  if (columnName === 'RECIPE') 
+//      html.push('<option value="new" class="text-center" data-id="newRecipe">*** NEW '+columnName+' ***</option>'+
+//                 '<option data-divider="true"></option>');
+//             
+//   
+//  for (var i=0;i<values.length;i++){
+//    var recordNumber = values[i][recordNumberInd];
+//    
+//    // If there is no record number, then skip to the next loop
+//    if (!recordNumber) continue;
+//    
+//    // If there is a recipe name use it in the search title
+//    // Search title format: 
+//    // batchId : alcType : recipeName : shortDescription
+//    // Example: B11:MEAD:Blue Jay Berry:blueberry and vanilla
+//    var searchTitle = "";
+//    if (values[i][nameInd] !== '') {
+//      searchTitle = values[i][recordNumberInd]+": "+values[i][nameInd]+': '+ values[i][descriptionInd]}
+//      else {
+//      searchTitle = values[i][recordNumberInd]+": "+values[i][descriptionInd]};
+//      
+//    // Fill the html array with HTML select options
+//    // Make the batch id the element id
+//    html.push('<option data-id="'+values[i][recordNumberInd]+'">' + searchTitle + '</option>');
+//  }
+//  
+//  return html;
+//}
+///**
+//*
+//* @param array {array} Spreadsheet data in a 2d array
+//*
+//* return {object} Objects containing string HTML options
+//*/
+//function separateUiListsAndConvertToHtml(array){
+//  var header = array[0];
+//  var lossTypeIndex = header.indexOf('LOSS TYPE');
+//  var itemNameIndex = header.indexOf('ITEM');
+//  var itemTypeIndex = header.indexOf('ITEM TYPE');
+//  var itemQtyIndex = header.indexOf('ITEM QTY');
+//  var itemUomIndex = header.indexOf('ITEM UOM');
+//
+//  
+//  var lossHtmlOptions = [];
+//  var itemHtmlOptions = [];
+//  
+//  for (var i=0;i<array.length;i++){
+//   
+//    var lossType = array[i][lossTypeIndex];
+//    var itemName = array[i][itemNameIndex];
+//    
+//    // If the loss type is not empty, add the select option
+//    if (lossType !== '') {
+//      lossHtmlOptions.push('<option value="'+lossType+'">'+lossType+'</option>');
+//    }
+//    
+//    // If the item name is not empty, create the select option
+//    // The format is: <option value="Honey" data-uom="gal">Honey: 120 gal</option><option value="Hops" data-uom="g">Hops: 1300 g</option>
+//    // The data-uom attribute is used to change the uom in the ingredient/additive tables
+//    
+//    if (itemName !== '') {
+//    
+//    itemHtmlOptions.push('<option value="'+itemName+'" data-uom="'+array[i][itemUomIndex]+'" >'+itemName+': '+array[i][itemQtyIndex]+' '+array[i][itemUomIndex]+'</option>');
+//    }
+//    
+// }
+// 
+// var outputLoss = lossHtmlOptions.join('');
+// var outputInventory = itemHtmlOptions.join('');
+// 
+// // Add lists to temporary storage object
+// memory_.lists.loss = outputLoss;
+// memory_.lists.inventory = outputInventory;
+// 
+// return {loss: outputLoss,
+//   inventoryItems: outputInventory,
+// }
+// 
+//  
+//}
+//
+//
+//
+//
+//
+//
+//function getLossTypeList(data){
+//  var header = data[0];
+//  var lossTypeIndex = header.indexOf('LOSS TYPE');
+//  
+//  return data
+//  .map(function(val,index){if (val) {if (index > 0) {return val[lossTypeIndex];}}})
+//  .filter(function(e) {return e}); // Remove blanks
+//}
+//
+//
+//
+//  
+// /**
+// * Add new batch id to the temporary storage, so it is loaded when the batch page is loaded
+// *
+// * This function needs to be in this file, because of a workaround using apps script
+// * It won't allow the page to be dynamically loaded with the "<" symbol. Unless it's combined with ">" 
+// *
+// * @param batchId {string} batch id returned from the server
+// */
+// function updateCurrentBatch(batchId){
+//     // Set the current batch id
+//     memory_.currentBatchId = batchId;
+//
+// }
+// 
+// 
+// 
+// 
+// 
+// /**
+// * Add new recipe id option to recipe select element 
+// * and make this new number the active selection
+// *
+// * This function needs to be in this file, because of a work around using apps script
+// * It won't allow the page to be dynamically loaded with the "<" symbol. Unless it's combined with ">" 
+// *
+// * @param recipeId {string} Recipe id returned from the server
+// */
+// function updateRecipeSelector(recipeId){
+//     var selectOption = '<option data-id="'+recipeId+'" selected="">'+recipeId+'</option>';
+// 
+//     $("#recipeSelector").append(selectOption);
+//     $("#recipeSelector").selectpicker("refresh");
+//     
+//     // Update the current record id
+//     // Put the current recipe id into temporary storage
+//      memory_.currentRecipeId = recipeId;
+// }
  
  
 

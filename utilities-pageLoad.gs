@@ -1,40 +1,4 @@
-var DEFAULT_PAGE = 'recipe';
-
-var PAGE_TITLE = 'Production - Meadery Solutions';
-
-
-var devurl = 'https://script.google.com/macros/s/AKfycbzI8vYN2SQaj2XeNrtVpYOWtMfhnRtWsjlda0IfgZQ/dev';
-
-
-
-
-const doGet = function (e){
-
-  var user = getUser_().isValid();
-
-  if (!user) return loadLogin_();
-  
-  return loadHome_();
-      var param = e.parameter;
-    
-      // --- Page routing
-      ROUTE.path('batchList',loadBatchList_);
-      if (ROUTE[param.p]) {
-        return ROUTE[param.p]();
-      }
-  
-      return RENDER('index','Production - Meadery Solutions',{page:DEFAULT_PAGE});
- 
-  
-  /*
-  ** If there isn't a parameter or if the parameter doesn't exist
-  ** default to index
-  */
-  return RENDER('index','Production - Meadery Solutions',{page:'login'});
-}
-
-
-
+var USER_OBJECT;
 
 /*
 ** Allows the doGet function to dynamically select which page is loaded
@@ -45,69 +9,77 @@ ROUTE.path = function(route,callback) {
   ROUTE[route] = callback;
 }
 
+var devurl = 'https://script.google.com/macros/s/AKfycbzI8vYN2SQaj2XeNrtVpYOWtMfhnRtWsjlda0IfgZQ/dev';
 
 
 
-
-
-/*
-** Renders the appropriate page
+/**
+* renders the appropriate page
 */
-function RENDER(title,argObj) {
+var render_ = function(page,recordId) {
   var html = HtmlService.createTemplateFromFile('index');
-  if (argObj) {
-    var keys = Object.keys(argObj);
-    keys.forEach(function(key){
-      html[key] = argObj[key];
-    })
-  }
+  html.payload = {};
+  html.payload.initPage = page;
+  html.payload.recordId = recordId;
+  html.payload.user = USER_OBJECT;
+  html.payload = JSON.stringify(html.payload);
   return html.evaluate()
   .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-  .setTitle(title)
+  .setTitle('Production - Meadery Solutions')
   .setSandboxMode(HtmlService.SandboxMode.IFRAME)
   .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 
-
-/*
-** Function to allow html page to load script content
-** If isPageLoad is passed to the function, then return an object with html and js pages.
+/**
+* Function to allow html page to load script content
+* If isPageLoad is passed to the function, then return an object with string html, js, and css files.
+* @param {string} fileName The page files to retrieve
+* @param {boolean} isPageLoad [optional] Determines if the fileObject or individual file should be returned
+* @param {recordId} recordId [optional] The record details to load once the page has been loaded
+* @return {HTML string}
 */
-function include(fileName,isPageLoad,recordId) {
-  if (!fileName) return;
+function include(page,isPageLoad,recordId) {
+  if (!page) return;
+  const fileObject = {};
+  fileObject.fileName = page;
   
-  var jsContent = '';
-  var cssContent = '';
-  var fileObject = {};
-  fileObject.fileName = fileName;
+  /**
+  * Gets script file. If a file doesn't exist, an error is thrown. Errors are caught and ignored
+  * @return {HTML string}
+  */
+  var getScriptFile_ = function(fileName,suffix) {
+    const file = fileName + (suffix ? "-"+suffix : '');
+    let htmlString = '';
+    try {htmlString = HtmlService.createHtmlOutputFromFile(file).getContent();}catch(e){};
+    return htmlString;
+  }
   
+  // If this is a page load, then return the HTML strings of the page's files
   if (isPageLoad) {
-    // An error will occur if either of the javascript and css files don't exist.
-    try{jsContent = HtmlService.createHtmlOutputFromFile(fileName+"-js").getContent();} catch(e){}
-    try{cssContent = HtmlService.createHtmlOutputFromFile(fileName+"-css").getContent();} catch(e){}
     fileObject.fileData = {
-      html: HtmlService.createHtmlOutputFromFile(fileName+"-html").getContent(),
-      js: jsContent,
-      css: cssContent,
-      id: recordId
+      html: getScriptFile_(page,'html'),
+      js: getScriptFile_(page,'js'),
+      css: getScriptFile_(page,'css')
     };
+    fileObject.recordId = recordId;
     return fileObject;
   }
-  return HtmlService.createHtmlOutputFromFile(fileName).getContent();
+  // If this isn't a page load, return the individual file
+  return getScriptFile_(page);
 }
 
-function loadLogin_() {
-  var argObj = {page:'login'};
-  return RENDER(PAGE_TITLE,argObj);
-}
 
-function loadBatchList_() {
-  var argObj = {page:'batchList'};
-  return RENDER(PAGE_TITLE,argObj);
-}
-
-function loadHome_() {
-  var argObj = {page:'home'};
-  return RENDER(PAGE_TITLE,argObj);
+/**
+* System required function to handle initial page load
+*/
+const doGet = function (e = {}){
+  const param = e.parameter;
+  USER_OBJECT = getUser_().isValid();
+  // If user isn't valid, load the login page
+  if (!USER_OBJECT) return render_('login');
+  // If user is valid and has passed a page parameter, load that page (option: load page w/ id)
+  if (param.p) {return render_(param.p,param.r);}
+  // If there isn't a page parameter passed, load the home screen
+  return render_('home');
 }

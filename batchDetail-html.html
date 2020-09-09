@@ -1,27 +1,8 @@
 <div class="container">
 
-<h1>BATCH</h1>
+<h1>BATCH DETAILS</h1>
 
-  <div class="row hline-bottom">
-        <div class="col-12">
-              <div class="row clearAlert input-group">
-                    <div class="col-12 col-md-6 input-group-prepend">
-                         <span class="input-group-text bg-info text-light" id="batchSelector-label">Select</span>
-                    
-                          <select class="selectpicker" data-live-search-placeholder="Search" id="batchSelector" title="Please select..." data-live-search="true" data-width="100%">
-                              
-                         </select>
-                          <div class="text-center fileLoadingSpinner">
-                              <div class="spinner-grow text-info" role="status">
-                                <span class="sr-only">Loading...</span>
-                              </div>
-                        </div>  
-                        
-                    </div>
-               </div>
-        </div>
-  </div>
-    
+  
     
     
 
@@ -36,7 +17,10 @@
     <a class="nav-item nav-link" id="nav-blendDetails-tab" data-toggle="tab" href="#nav-blendDetails" role="tab" aria-controls="nav-blendDetails" aria-selected="false">Blending</a>
     <a class="nav-item nav-link" id="nav-additional-tab" data-toggle="tab" href="#nav-additional" role="tab" aria-controls="nav-additional" aria-selected="false">Additional</a>
     
-    <button type="button" class="btn btn-primary float-right" id="batchSave">Save</button>
+    <div class="float-right detailBtns">
+      <button type="button" class="btn btn-primary" id="batchSaveBtn">Save</button>
+      <button type="button" class="btn btn-outline-secondary " id="createNewBatchBtn" disabled>New batch</button>    
+    </div>
   </div>
   
   
@@ -120,7 +104,10 @@
                   <div class="col-2">
                           <label for="recipeId">Recipe</label>
                           <a href="#" class="form-control save-field recipe-input" type="link" name="recipeId" id="recipeId" required="" disabled >Recipe</a>
-                   
+                       
+                  </div>
+                  <div class="col-2 d-flex align-items-center"  >
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="updateRecipeBtn" disabled>Update recipe</button>
                   </div>
                
 
@@ -221,7 +208,7 @@
         <table id="batch-ingredientTable"
         data-height="200"
         data-toggle="table"
-        class="table-borderless">
+        class="table-borderless table-sm">
             <thead>
                 <tr>
                     <th data-field="ingredient" class="wideCol ingredientSelect" data-sortable="true">Ingredient</th>
@@ -260,7 +247,7 @@
           <table id="batch-additiveTable"
           data-height="200"
           data-toggle="table"
-          class="table-borderless">
+          class="table-borderless table-sm">
             <thead>
               <tr>
                 <th data-field="ingredient" class="wideCol ingredientSelect" data-sortable="true">Additive</th>
@@ -296,7 +283,7 @@
           <table id="batch-lossTable"
           data-height="200"
           data-toggle="table"
-          class="table-borderless">
+          class="table-borderless table-sm">
             <thead>
               <tr>
                   <th data-field="lossType" style="width:100px;" class="lossSelect" data-sortable="true">Type</th>
@@ -605,7 +592,7 @@
                               <table id="batch-blendTable"
                               data-height="200"
                               data-toggle="table"
-                              class="table-borderless">
+                              class="table-borderless table-sm">
                                 <thead>
                                     <tr>
                                         <th data-field="sourceBatch" class="wideCol batchSelect" data-sortable="true">Batch #</th>
