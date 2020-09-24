@@ -27,24 +27,37 @@ function getDataFromArray_(array) {
 */
 var getRowsData_ = (function(main) {
 
-  
-  /**
-  * Converts a 2D array to an object
-  * The top row is used as the object key
-  * @param {array} array The array to convert
-  * @return {object} 
-  */
-  main.fromArray = function (array,columnHeadersRowIndex){
-    if (checkArrayLength_(array)) return {};
-    var headersIndex = columnHeadersRowIndex || 1;
-    return createReturnObject_(array.slice(headersIndex),array[headersIndex-1]);
+  // Returns true if the cell where cellData was read from is empty.
+  // Arguments:
+  //   - cellData: string
+  var isCellEmpty_ = function(cellData) {
+    return typeof(cellData) == "string" && cellData == "";
   };
   
+  // Returns true if the character char is alphabetical, false otherwise.
+  var isAlnum_ = function(char) {
+    return char >= 'A' && char <= 'Z' ||
+      char >= 'a' && char <= 'z' ||
+        isDigit_(char);
+  };
   
-  function createReturnObject_(arr,header){
-    var normalizedHeader = normalizeHeaders_(header);
+  // Returns true if the character char is a digit, false otherwise.
+  var isDigit_ = function(char) {
+    return char >= '0' && char <= '9';
+  };
+  
+ 
+  
+  
+  var createReturnObject_ = function(arr,header){
+    const normalizedHeader = normalizeHeaders_(header);
+    let arrayOfObjects;
+    if (arr.length >= 1) {
+     arrayOfObjects = getObjects_(arr,normalizedHeader ) 
+    };
+    
     return {
-      object:getObjects_(arr,normalizedHeader ),
+      object: arrayOfObjects || [],
       valuesArray:arr,
       normalizedHeader:normalizedHeader,
       plainHeader:header
@@ -53,13 +66,7 @@ var getRowsData_ = (function(main) {
   
   
   
-  function checkArrayLength_(array){
-    return array.length < 2;
-  };
-  
-  
-  
-  function getObjects_(data, keys) {
+  var getObjects_ = function(data, keys) {
     var objects = [];
     for (var i = 0; i < data.length; ++i) {
       var object = {};
@@ -77,7 +84,6 @@ var getRowsData_ = (function(main) {
         objects.push(object);
       }
     }
-    
     return objects;
   };
   
@@ -85,7 +91,7 @@ var getRowsData_ = (function(main) {
   // Empty Strings are returned for all Strings that could not be successfully normalized.
   // Arguments:
   //   - headers: Array of Strings to normalize
-  function normalizeHeaders_(headers) {
+  var normalizeHeaders_ = function (headers) {
     var keys = [];
     for (var i = 0; i < headers.length; ++i) {
       keys.push(normalizeHeader_(headers[i]));
@@ -102,7 +108,7 @@ var getRowsData_ = (function(main) {
   //   "First Name" -> "firstName"
   //   "Market Cap (millions) -> "marketCapMillions
   //   "1 number at the beginning is ignored" -> "numberAtTheBeginningIsIgnored"  
-  function normalizeHeader_(header) {
+  var normalizeHeader_ = function(header) {
     var key = "";
     var upperCase = false;
     for (var i = 0; i < header.length; ++i) {
@@ -127,24 +133,17 @@ var getRowsData_ = (function(main) {
     return key;
   };
   
-  // Returns true if the cell where cellData was read from is empty.
-  // Arguments:
-  //   - cellData: string
-  function isCellEmpty_(cellData) {
-    return typeof(cellData) == "string" && cellData == "";
+   /**
+  * Converts a 2D array to an object
+  * The top row is used as the object key
+  * @param {array} array The array to convert
+  * @return {object} 
+  */
+  main.fromArray = function (array,columnHeadersRowIndex){
+    var headersIndex = columnHeadersRowIndex || 1;
+    return createReturnObject_(array.slice(headersIndex),array[headersIndex-1]);
   };
   
-  // Returns true if the character char is alphabetical, false otherwise.
-  function isAlnum_(char) {
-    return char >= 'A' && char <= 'Z' ||
-      char >= 'a' && char <= 'z' ||
-        isDigit_(char);
-  };
-  
-  // Returns true if the character char is a digit, false otherwise.
-  function isDigit_(char) {
-    return char >= '0' && char <= '9';
-  };
   
   return main;
 }(getRowsData_ || {}));

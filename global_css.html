@@ -22,6 +22,17 @@ label {
   margin-bottom:-10px; /* decrease the space between the label and the input element*/
 }
 
+/*Resizes checkboxes*/
+input[type="checkbox"] {
+  background-color:#0b0095;
+  color:#FFF;
+  white-space: nowrap;
+  overflow:hidden;
+  
+  width:15px;
+  height:15px;
+}
+
 /* Header links are automatically hidden and show if the page is NOT "login" */
 #headerOptions {
   display: none;
@@ -147,8 +158,6 @@ td input{
   white-space: normal !important;
 }
 
-
-
 /* UNCOMMENT */
 .loadTable{
  /* display: none;*/
@@ -180,10 +189,6 @@ td input{
    width: 95%;
 }
 
-
-   
-
-
 .left-border:after {
   content: "";
    margin-left: 0;
@@ -205,6 +210,14 @@ td input{
   background-color:#f5fcfc;
 }
 
+}
+
+
+/*Keeps the buttons in-line*/
+.detailBtns{
+position: absolute;
+  top: 0;
+  right: 0;
 }
 
 </style>

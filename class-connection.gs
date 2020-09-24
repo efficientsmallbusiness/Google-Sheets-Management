@@ -3,7 +3,6 @@
 * Template variables for new clients and users
 */
 var globalTemplate_ = (function (){
-  
   // Template values
   var clientValues = {};
   clientValues.folderName = 'Meadery_Solutions_App';
@@ -16,8 +15,9 @@ var globalTemplate_ = (function (){
   var clientObject = {};
   clientObject.folders = {main:''};
   clientObject.sheets = {production:''};
-  clientObject.id = {row:0,batch:0,recipe:0};
+  clientObject.ids = {row:0,batch:0,recipe:0,user:0};
   clientObject.produced = {gallons:''};
+  clientObject.settings = {timezone:'America/Phoenix'};
   
   // Blank user object
   var userObject = {}
@@ -29,139 +29,7 @@ var globalTemplate_ = (function (){
     client:clientObject,
     user:userObject,
   }
-})()
-
-
-
-function log_(value) {
-  SpreadsheetApp
-  .openById('198vD7x9Yu0jCQzWwzBP4GqffEX-Jz71LhH9dke_8FVQ')
-  .getSheetByName('ERROR_LOG')
-  .appendRow([new Date(),JSON.stringify(value)])
-}
-
-/**
-* Client-side script calls this function to get all the array values of the specified table
-* @param {string} tableName The table to get the array values of
-* @param {object} accessObject The object containing the client's access object and company name
-* @param {boolean} isQuery Determines if a table or query tab is retrieved
-* @return {2D array} 
-*/
-function getTableArray(accessObject,tableName,isQuery) {
-  const clientInfo = conn_().getStoredInfo(accessObject);
-  return JSON.stringify({mainArray:conn_(clientInfo.sheets.production).setTable(tableName,isQuery).getValuesArray()});
-}
-
-
-
-
-
-
-
-function getUiLists(){
-  return getTableArray("UI_LISTS");
-}
-
-function test_getTableArrayById(){
-  var d = getTableArray({accessCode:'1234567'},'recipe');
-  //recipe-additiveTable
-  Logger.log((d));
-}
-
-
-/**
-* Return all table data for specified batch id for both the primary table and the associated details table
-* EXAMPLE: 
- - page = recipe
- - recordId = 200B
- - returns array from table_RECIPE where the column 'ID' = 200B
-           and an object from table_RECIPE_DETAILS where the column 'RECIPE ID' = 200B
-*
-* @param {object} accessObject The client's accessCode and company name
-* @param {string} table The main table to search in
-* @param {string} recordId [optional] The recordId to use
-* @return {object}
-*/
-var getPageData = function(accessObject,table,recordId){
-  const output = {};
-  output.subTable = {};
-  output.recordId = recordId;
-  const clientInfo = conn_().getStoredInfo(accessObject);
-  const conn = conn_(clientInfo.sheets.production);
-  // This will be processed on the client-side
-  const primaryTableArray = conn.setTable(table).getRecordById(recordId);
-  output.mainArray = primaryTableArray;
-  
-  if (recordId) {
-    // The subTable keys must match the associated table they are supposed to fill
-    // EX: 
-    // - <table id='batch-ingredientTable'></table>
-    // - subTable['batch-ingredientTable']
-    switch (table) {
-      case 'batch':
-        const splitBatchTable = separateIngredientTables_(getSubTableRecords_(conn,'batch_details',recordId,'batchId'));
-        output.subTable['batch-ingredientTable'] = splitBatchTable.ingredients;
-        output.subTable['batch-additiveTable'] = splitBatchTable.additives;
-        output.subTable['batch-lossTable'] = getSubTableRecords_(conn,'loss_details',recordId,'batchId');
-        output.subTable['batch-fermentTable'] = getSubTableRecords_(conn,'ferment_details',recordId,'batchId');
-        output.subTable['batch-blendTable'] = getSubTableRecords_(conn,'blend_details',recordId,'batchId');
-        break;
-      case 'recipe':
-        const splitRecipeTable = separateIngredientTables_(getSubTableRecords_(conn,'recipe_details',recordId,'recipeId'));
-        output.subTable['recipe-ingredientTable'] = splitRecipeTable.ingredients;
-        output.subTable['recipe-additiveTable'] = splitRecipeTable.additives;
-        break;
-      case 'inventory':
-        break;
-      case 'vessels':
-        break;
-      case 'aging':
-        break;
-      case 'schedule':
-        break;
-    }
-  }
-  
-  return JSON.stringify(output);
-}
-
-
-
-/**
-* Get table records of sub tables (The tables that hold details about the main table)
-* Returns the records of a "Details" table
-* @param {string} subTableName The table to search in
-* @param {string} searchId The foreign id to search for
-* @param {string} foreignCol The name of the foreign column to search in
-*/
-var getSubTableRecords_ = function(conn,subTableName,searchId,foreignCol) {
-    // This is processed on the server side, because this table will get huge and I don't want to send that large of an array to the client-side
-    const values = conn.setTable(subTableName).getValues().object;
-    return values ? values.filter(function(item){Logger.log(item);return item[foreignCol] == searchId}) : null;
-}
-
-
-
-/**
-* separate object values (specifically ingredient/additive types from the recipe and batch tables) 
-* @param {array} arrayOfObjects The details table for the batch 
-* @param {object} 
-*/
-var separateIngredientTables_ = function(arrayOfObjects) {
-  var ingredients = [];
-  var additives = [];
-  // Loop through array
-  for (var i=0;i<arrayOfObjects.length;i++) {
-    var valuesObject = arrayOfObjects[i];
-    // Loop through object to check values
-    Object.values(valuesObject).forEach(function(val) {
-      if (typeof val != 'string') return;
-      if (val.toLowerCase() == 'ingredient') ingredients.push(valuesObject);
-      else if (val.toLowerCase() == 'additive') additives.push(valuesObject);
-    });
-  }
-  return {ingredients:ingredients,additives:additives};
-}
+})();
 
 
 
@@ -180,18 +48,11 @@ var test_createClient_ = function(){
 }
 
 
-var test_getTableRecordById_ = function() {
-  var conn2 = conn_('198vD7x9Yu0jCQzWwzBP4GqffEX-Jz71LhH9dke_8FVQ');
-  var v2 = conn2.setTable('users').getRecordById('1');
-  
-  Logger.log(v2);
-}
 
 
 function conn_(spreadsheetId){
  return new dbConn_(spreadsheetId); 
 }
-
 
 
 /**
@@ -206,12 +67,27 @@ const dbConn_ = function(spreadsheetId) {
   this.spreadsheetId = spreadsheetId;
 };
 
+
+/**
+* Creates an array output that matches the destination sheet
+* Appends row to the sheet with the new array
+* @param {object} newValues The key/value pairs to be appended to the sheet. The keys must match the column headers
+*/
+dbConn_.prototype.createRecord = function (newValues){
+  log_('createRecord');
+  const tableValues = this.getValues();
+  const output = removeNull_(formatTableArray_(tableValues.normalizedHeader,newValues));
+  this.getSheet_().appendRow(output);
+}
+
 /**
 * Updates row values
 * @param {object} newValues The object values to add to the sheet
 * @return {!dbConn_} This service, for chaining.
 */
 dbConn_.prototype.updateRecord = function (newValues){
+log_('updateRecord');
+log_(newValues);
   // If there is no id key, throw an error
   if (! newValues.id ) throwError_('Missing record id');
   
@@ -249,7 +125,6 @@ dbConn_.prototype.updateRecord = function (newValues){
       sheet.appendRow(output);
       
     } catch(e) {
-      lock.releaseLock();
       Logger.log('The following error occured while attempting to run the function "": ' + e);
     } 
     
@@ -259,17 +134,43 @@ dbConn_.prototype.updateRecord = function (newValues){
   }
 }
 
+
 /**
-* Creates an array output that matches the destination sheet
-* Appends row to the sheet with the new array
-* @param {string} recordId The new string to use in the ID column
-* @param {object} newValues The key/value pairs to be appended to the sheet. The keys must match the column headers
+* Updates row values
+* @param {object} newValues The object values to add to the sheet
+* @return {!dbConn_} This service, for chaining.
 */
-dbConn_.prototype.createRecord = function (recordId,newValues){
-  newValues.id = recordId;
-  const tableValues = this.getValues();
-  const output = removeNull_(formatTableArray_(tableValues.normalizedHeader,newValues));
-  this.getSheet_().appendRow(output);
+dbConn_.prototype.deleteRecord = function (newValues){
+log_('deleteRecord');
+log_(newValues);
+  // If there is no id key, throw an error
+  if (! newValues.id ) throwError_('Missing record id');
+  
+  const lock = LockService.getScriptLock();
+  // Create lock to avoid concurrent use
+  if (lock.tryLock(10*1000)) {  
+    
+    try {
+      const sheet = this.getSheet_();
+      const values = this.getValues().object;
+      
+      for (let i=0;i<values.length;i++){
+        if (!values[i].id) continue;// If there is no id in the column, continue
+        if (values[i].id.toString() === newValues.id.toString()){
+          sheet.deleteRow(i+2)
+          return {response:"Record saved!",status:'success'};
+        }
+      }
+      
+    } catch(e) {
+      lock.releaseLock();
+      Logger.log('The following error occured while attempting to run the function "": ' + e);
+    } 
+    
+  } else {
+    // if lock times out
+    return {response:"Server timed out! Wait a moment and try again.",status:'error'};
+  }
 }
 
 
@@ -292,8 +193,7 @@ dbConn_.prototype.getRecordById = function (id){
   });
   
   return record;
-}
-
+};
 
 /**
 * @return {object} Client record for the active user
@@ -313,8 +213,7 @@ dbConn_.prototype.getUserRecordFromClientDb = function (email){
   });
   
   return record;
-}
-
+};
 
 /**
 * Gets the dataRange of values
@@ -322,9 +221,7 @@ dbConn_.prototype.getUserRecordFromClientDb = function (email){
 */
 dbConn_.prototype.getValues = function (columnHeadersRowIndex){
   return getRowsData_.fromArray(this.getSheet_().getDataRange().getValues(),columnHeadersRowIndex);
-}
-
-
+};
 
 /**
 * Gets the dataRange of values
@@ -332,18 +229,7 @@ dbConn_.prototype.getValues = function (columnHeadersRowIndex){
 */
 dbConn_.prototype.getValuesArray = function (){
   return this.getSheet_().getDataRange().getValues();
-}
-
-
-/**
-* Sets the sheet name with the "table_" prefix
-*/
-dbConn_.prototype.setTable = function(tableName,isQuery) {
-  const tablePrefix = !isQuery ? 'table_' : 'query_';
-  this.setSheetName( tablePrefix + tableName.toUpperCase() );
-  return this
-}
-
+};
 
 /**
 * Sets the sheet(tab) ID for the specified spreadsheet
@@ -357,9 +243,6 @@ dbConn_.prototype.setSheetId = function(id) {
   return this;
 };
 
-
-
-
 /**
 * Sets the Spreadsheet ID 
 * @param {string} id Spreadsheet id
@@ -369,8 +252,6 @@ dbConn_.prototype.setSpreadsheetUrl = function(url) {
   this.spreadsheetUrl = url;
   return this;
 };
-
-
 
 /**
 * Sets the Spreadsheet ID 
@@ -394,6 +275,14 @@ dbConn_.prototype.setSheetName = function(name) {
   return this;
 };
 
+/**
+* Sets the sheet name with the "table_" prefix
+*/
+dbConn_.prototype.setTable = function(tableName,isQuery) {
+  const tablePrefix = !isQuery ? 'table_' : 'query_';
+  this.setSheetName( tablePrefix + tableName.toUpperCase() );
+  return this
+};
 
 
 /**
@@ -403,36 +292,26 @@ dbConn_.prototype.setSheetName = function(name) {
 */
 dbConn_.prototype.getSheet_ = function() {
   if ( !this.sheet_ ) {
-    if (this.sheetName) {
-      this.sheet_ = this.getSpreadsheet_().getSheetByName(this.sheetName);
-    } else if (this.sheetId) {
-      this.sheet_ = this.getSheetById_(this.sheetId);
-    } else {
-      throwError_('Missing sheet name or id');
-    }
+    if (this.sheetName) this.sheet_ = this.getSpreadsheet_().getSheetByName(this.sheetName);
+    else if (this.sheetId) this.sheet_ = this.getSheetById_(this.sheetId);
+    else throwError_('Missing sheet name or id');
   }
   return this.sheet_;
-}
+};
 
 
-
-
+/**
+* @return {Spreadsheet object}
+* @private
+*/
 dbConn_.prototype.getSpreadsheet_ = function() {
-  var spreadsheet;
-  
-  if (this.spreadsheetUrl) {
-    spreadsheet = SpreadsheetApp.openByUrl(this.spreadsheetUrl);
-  }
-  else if (this.spreadsheetId) {
-    spreadsheet = SpreadsheetApp.openById(this.spreadsheetId);
-  }
-  else {
-    throwError_('Missing spreadsheet url or id');
-  }
+  let spreadsheet;
+  if (this.spreadsheetUrl) spreadsheet = SpreadsheetApp.openByUrl(this.spreadsheetUrl);
+  else if (this.spreadsheetId) spreadsheet = SpreadsheetApp.openById(this.spreadsheetId);
+  else throwError_('Missing spreadsheet url or id');
   
   return spreadsheet;
-}
-
+};
 
 /**
 * Gets sheet with specified id
@@ -449,15 +328,17 @@ dbConn_.prototype.getSheetById_ = function(id){
     }
   });
   return sheet;
-}
+};
 
 
+/**
+* NOT IN USE
+* Is used to determine the appropriate method for retrieving sheet data
+*/
 dbConn_.prototype.showHiddenRows = function(boolean) {
   this.hiddenRows = boolean;
   return this;
-}
-
-
+};
 
 /**
 * Gets the stored app data for the specified company
@@ -467,6 +348,16 @@ dbConn_.prototype.showHiddenRows = function(boolean) {
 */
 dbConn_.prototype.getStoredInfo = function(accessObject) {
   return this.getStorage_('script').get(accessObject.accessCode);
+};
+
+
+
+/**
+* Sets the client's info
+* This is used to update a client's app data object. Used in conjuction with "getClientInfo"
+*/
+dbConn_.prototype.setClientInfo = function(accessObject,value) {
+  this.getStorage_('script').set(accessObject.accessCode,value);
 }
 
 /**
@@ -481,24 +372,21 @@ dbConn_.prototype.getClientInfo = function(accessObject,activeUserEmail) {
   var cachedRecord = this.getStorage_('cache').get(storageKey);
   var clientRecord = null;
   
-  Logger.log('function: getClientInfo')
- // clears the script cache for troubleshooting
+ // clears the cache for troubleshooting
   //this.getStorage_('cache').remove(storageKey);
   
   if ( !cachedRecord ) {
-    Logger.log('client info not cached');
     // Get the client's business information stored in the Registered Client's spreadsheet
     // The registered client's script: spreadsheetUrl = https://docs.google.com/spreadsheets/d/18GrM5sSx3BsA_4lOT90z17i0OJMvktqDm6-ToV_5des/edit#gid=0
     var baseUrl = 'https://script.google.com/macros/s/AKfycbxu6J7GF8ZZA6rRT2_TLxWGtI_zAJnF8EEDQX_CEGRi8UMoOFI/exec';
     const url = baseUrl + '?authorize=' + encrypt_(JSON.stringify(accessObject));
     var response;
     
+    // If the client exists in the Meadery Solutions DB then continue
     if ( response = this.fetchResponse_(url) ) {
-      
       
       // If the client is 'ACTIVE' then continue
       if (response.status == 'ACTIVE') {
-        Logger.log('client is active');
         // Set client's information in temporary cache.
         // This is the client's business information NOT the persistent client app data
         var minutesToCache = 360;// 6hrs
@@ -515,12 +403,11 @@ dbConn_.prototype.getClientInfo = function(accessObject,activeUserEmail) {
       }
     }
   } else if (cachedRecord.status == 'ACTIVE'){
-    Logger.log('Client info cached')
     clientRecord = this.getStorage_('script').get(accessObject.accessCode);
   }
   
   return clientRecord;
-}
+};
 
 
 
@@ -533,8 +420,8 @@ dbConn_.prototype.setClientRecord = function(accessCode) {
   var encryptedString = encrypt_(mySuperSecretObject);
   var url = 'https://script.google.com/macros/s/AKfycbxu6J7GF8ZZA6rRT2_TLxWGtI_zAJnF8EEDQX_CEGRi8UMoOFI/exec';
   const response = this.fetchResponse_(url,encryptedString,'post');
-  return response;
-}
+  return this;
+};
 
 
 
@@ -552,27 +439,21 @@ dbConn_.prototype.setClientRecord = function(accessCode) {
 * @return {object} The persistent client app data
 */
 dbConn_.prototype.createClientAppDataObject = function(accessCode,activeUserEmail) {
-  Logger.log('creating a client app object')
+  const userId = getNextId('user');
   const clientObject = globalTemplate_.client;
-//  // Create folder
-  //UNCOMMENT
-  
-//  clientObject.folders.main = createFolder_();
-  clientObject.folders.main = '1wzxepIlIlSAigCXrH0WXeyD1_mD3bl_4';
-//  // Create spreadsheet database
-//  const databaseId = createProductionDatabase_();
-  
-  const databaseId = '198vD7x9Yu0jCQzWwzBP4GqffEX-Jz71LhH9dke_8FVQ';
-  const newUserValues = {status:'ACTIVE',permission:'ADMIN',email:activeUserEmail};
+  // Create folder
+  clientObject.folders.main = createFolder_();
+  // Create spreadsheet database
+  const databaseId = createProductionDatabase_();
+  const newUserValues = {status:'ACTIVE',permission:'ADMIN',email:activeUserEmail,id:userId};
   // Add first user
-  this.setSpreadsheetId(databaseId).setTable('users').createRecord(1,newUserValues)
+  this.setSpreadsheetId(databaseId).setTable('users').createRecord(newUserValues)
  
   clientObject.sheets.production = databaseId;
   // Store Client Object in persistent storage
   this.getStorage_('script').set(accessCode,clientObject);
   return clientObject;
-}
-
+};
 
 /**
 * Fetches values from another website/server
@@ -598,11 +479,9 @@ dbConn_.prototype.fetchResponse_ = function(url,payload,method,auth) {
   return this.getResponseData_(response);
 };
 
-
-
-
-
-
+/**
+* @return {object} The UrlFetchApp response 
+*/
 dbConn_.prototype.getResponseData_ = function (response) {
   if (response.getResponseCode() == 200 &&
       response.getHeaders()['Content-Type'].indexOf('application/json') >= 0) {
@@ -614,11 +493,7 @@ dbConn_.prototype.getResponseData_ = function (response) {
     }
   }
   return result;
-}
-
-
-
-
+};
 
 /**
 * Parses the response using the service's response format.
@@ -636,9 +511,6 @@ dbConn_.prototype.parseResponse_ = function(content) {
   return response;
 };
 
-
-
-
 /**
 * Identifies null values in an array, so they can be easily replaced
 * @param array {array}
@@ -646,14 +518,12 @@ dbConn_.prototype.parseResponse_ = function(content) {
 * @private
 */
 dbConn_.prototype.findNull_ = function (array){
-  // Replace null values with a blank string
+  // Replace null values with 'isNullValue'
   for (i = 0; i < array.length;i++){
     !array[i] ? array[i]='isNullValue' : null;
   }
   return array;
-}
-
-
+};
 
 /**
 * insertMissingValuess
@@ -665,9 +535,7 @@ dbConn_.prototype.insertMissingValues_ = function (newRow,currRow) {
     if (v == 'isNullValue') { newRow[i] = currRow[i];  }
   }); 
   return newRow;    
-}
-
-
+};
 
 /**
 * Gets the storage layer for this service, used to persist responses.

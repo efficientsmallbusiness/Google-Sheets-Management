@@ -1,4 +1,13 @@
 /*
+Recipe fields should be editable, but if they are changed
+The user should be prompted to "convert to recipe" (create a new recipe from the current config)
+otherwise notify the user that the recipe will be updated and the cola and labels may need resubmitted
+Have an "update recipe" and "convert to recipe" buttons
+
+New Batch (from recipe - select recipe to load)
+New Batch (new recipe - require alc type, short description, status, created, ID)
+
+
 - Show loading bar when signing in
 - Add new users from the settings page
   This should add the new email to the company folder as an editor. 
@@ -6,9 +15,6 @@
   And send a welcome email
 - If user validation ever returns null, log the user out
 
-- batchDetails page: 
-- include an update recipe button and a "back to batches list" button
-- make the recipe link work
 - When a new batch is created, prompt the user to select "from recipe" or "create new"
   If "create new", make them enter a brief description [required], optionally a name, type of alc.
   Then create a new recipe from those details, use default values if none exist
@@ -27,6 +33,20 @@
 NOTES:
 Everytime a user logs in or refreshes the page, their user properties are updated
 So if their name is changed in the system, they will need to refresh their browser for changes to take effect.
+
+When adding a new table to a page, you must make sure the table details are added to the "getPageData" function
+
+ADDING NEW INPUT FIELDS
+- The input element ID must be the normalized version of the associated column title
+  Examples: 
+    The input field saving to the column "INITIAL GALLONS 1" would be "<input id="initialGallons1">"
+    The input fields saving to "1 UNIQUE-ITEM" would be "<input id="uniqueItem">" (because a normalized name cannot lead with a number and characters are omitted)
+- Input fields that should be saved to a specific record must include the data attribute data-saveTo="[SHEET NAME]" without the "table_" prefix.
+  Example: The input "<input id="myInput" data-saveTo="batch">" would save to the "table_BATCH" spreadsheet tab
+
+ADDING NEW TABLES
+- The table tag and the "add" button must include the data attribute "data-saveTableTo="[SHEET NAME]"" 
+  EXAMPLE: The following would save to the sheet "table_RECIPE_DETAILS": <table data-saveTableTo="recipe_details"> and <button data-saveTableTo="recipe_details">ADD</button>
 */
 
 function testingUrlFetchApp(){

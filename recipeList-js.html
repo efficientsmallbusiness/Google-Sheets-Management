@@ -1,12 +1,26 @@
- $(function(){
+<script>// this tag is removed when the page is loaded
+
+$(function(){
      $("#indexLoader").hide();
      loadTables('loading');
     getRecipeList();
    // Creates dblClick event for table
-   createDblClickEvent();
+   createEventHandlers();
     
   });
   
+  
+var createEventHandlers = function () {
+  
+    // New Batch button event
+    $('#createNewRecipeBtn').click(function(){
+    alert_('new recipe');
+      //createNewPageRecord('recipe');
+    });
+    
+    // Creates dblClick event for table
+    createDblClickEvent();
+}
   
   
 function getRecipeList(){

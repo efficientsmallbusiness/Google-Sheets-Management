@@ -1,171 +1,3 @@
-/**
-* Gets the company name from the user script property
-*/
-function getCompanyName(){
-  return JSON.parse(userProps().getProperty('loggedIn')).company;
-}
-
-
-
-/**
-* return company JSON object
-*/
-function getCompanyDetails(){
-  return getScriptProp(getCompanyName());
-}
-
-
-
-/**
-* return spreadsheet id for production sheet
-*/
-function getProductionSheetId(){
-  return getCompanyDetails().sheetId.production;
-}
-
-
-/**
-* return {object} Spreadsheet object
-*/
-function dbConn() {
-// var spreadsheetId = '198vD7x9Yu0jCQzWwzBP4GqffEX-Jz71LhH9dke_8FVQ'; // Micah
-  // This needs tested soon to see when access is granted
-  //var spreadsheetId = '1-wq5o1gknAVFf02v2UmoYrDznv-PV9ev0tRR9jPfLkE'; // Hannah
-  //  var sheetName = 'table_BATCH';
-  return SpreadsheetApp.openById(getProductionSheetId());
-}
-
-
-
-
-/**
-* Sets a single value in a page sheet, so it needs the sheet name, row, col, and value
-* return nothing
-*/
-function setValueInSheet(sheetName,row,col,val){
-  dbConn().getSheetByName(sheetName).getRange(row,col).setValue(val);
-}
-
-
-
-
-
-
-/**
-* Append row to batch tab
-*
-* This may need updated so it adds the fields based on their column name
-*
-* @param batchId {array} 
-*/
-function createNewBatchRecord(batchId){
-    dbConn().getSheetByName('table_BATCH').appendRow(batchId)
-}
-
-
-
-/**
-* Append row to recipe tab
-*
-* @param recipeId {array} 1D array containing the new recipe id and the date it was created
-*/
-function createNewRecipeRecord(recipeId){
-    dbConn().getSheetByName('table_RECIPE').appendRow(recipeId)
-}
-
-
-
-
-// For testing purposes only
-function setSheetValue(value){
-  return dbConn().getSheetByName('NOTES').getRange(1,1).setValue(value);
-}
-
-
-/**
-* Get values from sheet data range
-*/
-function getSheetData(sheetName){
-  return dbConn().getSheetByName(sheetName).getDataRange().getValues();
-}
-
-
-
-
-
-
-/**
-* Get the top row values from sheet
-*/
-function getSheetHeader(sheetName){
-var sheet = dbConn().getSheetByName(sheetName);
-  return sheet.getRange(1,1,1,sheet.getLastColumn()).getValues();
-}
-
-
-
-
-
-
-
-
-
-
-
-// Client-side script calls this function to get the values to populate the recipe list for the Recipe management page
-function getRecipeList(){
-  // Get data from recipe sheet and stringify it
-  return JSON.stringify(getSheetData('table_RECIPE'));
-}
-
-
-
-
-
-
-
-var testBlendData = [{
-date: '2020-01-06',
-temp: '73',
-tempOn: '',
-tempOff: '',
-sg: '1.112',
-id: 88,
-batch: 123,
-}];
-
-
-var testFermTable = [{
-date: '2020-01-02',
-temp: '73',
-tempOn: '',
-tempOff: '',
-sg: '1.068',
-id: '98',
-batch: '123',
-ph: '3.14',
-degas: 'Yes',
-o2Lpm: '1',
-abv: '7',
-fermK: '6',
-},
-{
-date: '2020-02-03',
-temp: '83',
-tempOn: '70',
-tempOff: '79',
-sg: '1.012',
-abv: '12',
-o2Lpm: 'x',
-degas: 'Yes',
-note: 'This is a short note.',
-id: '99',
-batch: '123',
-}];
-
-
-
-
 
 
 
@@ -180,272 +12,224 @@ function getLossTypeList(data){
 
 
 
-
-
-
-
+function log_(value) {
+  SpreadsheetApp
+  .openById('198vD7x9Yu0jCQzWwzBP4GqffEX-Jz71LhH9dke_8FVQ')
+  .getSheetByName('ERROR_LOG')
+  .appendRow([new Date(),JSON.stringify(value)])
+}
 
 /**
-* getInventoryData [NOT WORKING]
-*
-* Get current inventory data. 
-*
-* @param batchNum {string} batch id to search for in range
-*
-* return {array}
+* Client-side script calls this function to get all the array values of the specified table
+* @param {string} tableName The table to get the array values of
+* @param {object} accessObject The object containing the client's access object and company name
+* @param {boolean} isQuery Determines if a table or query tab is retrieved
+* @return {2D array} 
 */
-function getInventoryData(batchId){
-  var data = getSheetData('query_INGREDIENT_INVENTORY');
+function getTableArray(accessObject,tableName,isQuery) {
+  const clientInfo = conn_().getStoredInfo(accessObject);
+  return JSON.stringify({mainArray:conn_(clientInfo.sheets.production).setTable(tableName,isQuery).getValuesArray()});
 }
 
 
 
-
-
+function test_getNextId(){
+var response = getNextId({accessCode:'1234567',name:'Artivem Mead Co.'},'recipe');
+Logger.log(response);
+}
 /**
-* getLossData
-*
-* Get data range values from loss table for the selected batch
-*
-* @param batchNum {string} batch id to search for in range
-*
-* return {array}
+* @param {object} accessObject
+* @param {string} idType
+  - ID types: row, batch, recipe, user
 */
-function getLossData(batchNum){
-  var data = getSheetData("table_LOSS");
-  var header = data[0];
-  var batchIndex = header.indexOf("BATCH ID");
+function getNextId(accessObject,idType){
+  const lock = LockService.getScriptLock();
   
-  var batchId = parseInt(batchNum);
-  
-  var values = [];
-  
-  // Add header to top of array
-  values.push(header);
-  
-  // Add matching batch id rows to array
-  for (var i=0;i<data.length;i++){
-    if (parseInt(data[i][batchIndex]) === batchId){
-      values.push(data[i]);
-    }
+  // Create lock to avoid concurrent use
+  if (lock.tryLock(10*1000)) {  
+    const clientInfo = conn_().getStoredInfo(accessObject);
+    Logger.log(clientInfo);
+    const ids = clientInfo.ids;
+    var nextId = parseInt(ids[idType]) + 1;
+    
+    clientInfo.ids[idType] = nextId; // update client info
+    conn_().setClientInfo(accessObject,clientInfo); // Set new ID
   }
   
-  return values;
+  // Add id suffix
+  if (idType == 'batch') nextId += 'B';
+  else if (idType == 'recipe') nextId += 'R';
+  
+  return nextId;
 }
 
 
-
-
-
 /**
-* Updates sheet value 
+* Return all table data for specified batch id for both the primary table and the associated details table
+* EXAMPLE: 
+ - page = recipe
+ - recordId = 200B
+ - returns array from table_RECIPE where the column 'ID' = 200B
+           and an object from table_RECIPE_DETAILS where the column 'RECIPE ID' = 200B
+*
+* @param {object} accessObject The client's accessCode and company name
+* @param {string} table The main table to search in
+* @param {string} recordId [optional] The recordId to use
+* @return {object}
 */
-function updateRecord(clientObject){
-  var json = JSON.parse(clientObject);
-  // replace undefined with blank
-  var value = json.value ? json.value : '';
-  var data = getSheetData(json.sheetName);
-  var header = normalizeHeaders_(data[0]);
-  var recordIndex = header.indexOf(json.recordColumnName);
-  var record = json.record;
+var getPageData = function(accessObject,tableName,recordId){
+  const output = {};
+  const clientInfo = conn_().getStoredInfo(accessObject);
+  const conn = conn_(clientInfo.sheets.production);
+  const primaryObject = conn.setTable(tableName).getRecordById(recordId);
+  output.subTable = {};
+  output.recordId = recordId;
+  output[tableName] = primaryObject;
   
-  // Get column by matching the element id with the normalized header
-  var col = header.indexOf(json.columnName)+1;
-  var row = 0;
   
-  // Find row by matching the record id
-  for (var i=0;i<data.length;i++){
-    if (data[i][recordIndex] === record){
-      row = i+1;
+  // The subTable keys must match the associated table id they are supposed to fill
+  // EX: 
+  // - <table id='batch-table-ingredient'></table>
+  // - subTable['batch-table-ingredient']
+  switch (tableName) {
+    case 'batch':
+      
+      output['recipe'] = conn.setTable('recipe').getRecordById(primaryObject.recipeId);//Fills input fields not a table
+      
+      // Get the sub tables
+      const splitBatchTable = separateIngredientTables_(getSubTableRecords_(conn,'batch_details',recordId,'batchId'));
+      output.subTable['batch-table-ingredient'] = splitBatchTable.ingredients;
+      output.subTable['batch-table-additive'] = splitBatchTable.additives;
+      output.subTable['batch-table-loss'] = getSubTableRecords_(conn,'loss_details',recordId,'batchId');
+      output.subTable['batch-table-ferment'] = getSubTableRecords_(conn,'ferment_details',recordId,'batchId');
+      output.subTable['batch-table-blend'] = getSubTableRecords_(conn,'blend_details',recordId,'batchId');
       break;
+    case 'recipe':
+      const splitRecipeTable = separateIngredientTables_(getSubTableRecords_(conn,'recipe_details',recordId,'recipeId'));
+      output.subTable['recipe-table-ingredient'] = splitRecipeTable.ingredients;
+      output.subTable['recipe-table-additive'] = splitRecipeTable.additives;
+      break;
+    case 'inventory':
+      break;
+    case 'vessels':
+      break;
+    case 'aging':
+      break;
+    case 'schedule':
+      break;
+  }
+  
+  return JSON.stringify(output);
+}
+
+/**
+* Get table records of sub tables (The tables that hold details about the main table)
+* Returns the records of a "Details" table
+* @param {string} subTableName The table to search in
+* @param {string} searchId The foreign id to search for
+* @param {string} foreignCol The name of the foreign column to search in
+*/
+var getSubTableRecords_ = function(conn,subTableName,searchId,foreignCol) {
+    // This is processed on the server side, because this table will get huge and I don't want to send that large of an array to the client-side
+    const values = conn.setTable(subTableName).getValues().object;  
+    return values ? values.filter(function(item){return item[foreignCol] == searchId}) : null;
+}
+
+/**
+* separate object values (specifically ingredient/additive types from the recipe and batch tables) 
+* @param {array} arrayOfObjects The details table for the batch 
+* @param {object} 
+*/
+var separateIngredientTables_ = function(arrayOfObjects) {
+  var ingredients = [];
+  var additives = [];
+  // Loop through array
+  for (var i=0;i<arrayOfObjects.length;i++) {
+    var valuesObject = arrayOfObjects[i];
+    // Loop through object to check values
+    Object.values(valuesObject).forEach(function(val) {
+      if (typeof val != 'string') return;
+      if (val.toLowerCase() == 'ingredient') ingredients.push(valuesObject);
+      else if (val.toLowerCase() == 'additive') additives.push(valuesObject);
+    });
+  }
+  return {ingredients:ingredients,additives:additives};
+}
+
+
+function test_createNewSheetRecord (){
+  var respon = createNewSheetRecord({accessCode:'1234567'},
+                               {btnId:'recipe-btn-blend',loadedRecordId:'123B'},
+                               'row');
+  Logger.log(respon);
+}
+
+
+/**
+* Updates the spreadsheet database
+* @param {object} accessObject Cotains the client accessCode and company name
+* @param {object} detailsObject
+- {sheetName: 'batch', // The sheet name to update (will be converted to "table_BATCH" to match the actual sheet title)
+   record: '123B', // The ID to update
+   columnName: 'batchStatus', // normalized header name
+   value: this.value} // the value to enter
+* @param {string} action The action to take: 'create', 'update', 'delete'
+*/
+var updateDatabase = function (accessObject,rowDetails,action) {
+  const clientInfo = conn_().getStoredInfo(accessObject);
+  if (action == 'update') {
+    conn_(clientInfo.sheets.production).setTable(rowDetails.sheetName).updateRecord(rowDetails);
+  } else if (action == 'delete') {
+    conn_(clientInfo.sheets.production).setTable(rowDetails.sheetName).deleteRecord(rowDetails);
+  } 
+  
+}
+
+
+/**
+* Creates a new row in a spreadsheet and sets the initial values
+* @param {string} idType The type of id to use (must match the client's app object: row, batch, recipe)
+* @param {object} rowDetails Object containing all of the details required to populate a sheet row
+* @param {object} accessObject
+* @return {object} The initial row values to display
+ - The initial values will be used to populate the new table row on the UI
+*/
+var createNewSheetRecord = function (accessObject,rowDetails,idType) {
+  const clientInfo = conn_().getStoredInfo(accessObject);
+  // Get next available record
+  rowDetails.id = getNextId(accessObject,idType);
+  // Create initial values for the new row
+  createNewRowObject_(rowDetails,clientInfo.settings.timezone)
+  // Create new record in sheet
+  conn_(clientInfo.sheets.production).setTable(rowDetails.sheetName).createRecord(rowDetails.initialRowValues);
+
+  return JSON.stringify(rowDetails);
+};
+
+
+
+/**
+* Adds the required values for a new record to the icoming object
+* @param {object} obj The object containing the edited row values
+*/
+var createNewRowObject_ = function (obj,timezone) {
+  const btnId = obj.btnId;
+  obj.initialRowValues = {};
+  
+  if (btnId) {
+    // Check if the object contains an ingredient table
+    if (btnId.indexOf('ingredient') > -1 || btnId.indexOf('additive') > -1 ) {
+      const type = btnId.substring(btnId.length,btnId.lastIndexOf("-")+1);
+      obj.initialRowValues.type = type; 
     }
+    const foreignKey = btnId.substring(btnId.indexOf("-"),0) + 'Id'; // The foreign key field (eg "RECIPE ID")
+    obj.initialRowValues[foreignKey] = obj.loadedRecordId;
   }
-  
-  setValueInSheet(json.sheetName,row,col,value);
-}
+  // These are mandatory fields for every table record
+  obj.initialRowValues.id = obj.id; // Generated record number
+  obj.initialRowValues.created = Utilities.formatDate(new Date(), timezone, "MM/dd/yyyy");
+};
 
-
-
-
-
-/**
-* processRow
-*
-* Processes table row updates
-*
-* @param rowObject {object} JSON object containing row values and other relevant data (such as sheet name)
-*
-* return nothing
-*/
-function processRow(rowObject){
-  var rowVals = {};
-  
-  if (typeof rowObject === 'string') {
-    rowVals = JSON.parse(rowObject);
-  } else {
-    rowVals = rowObject;
-  }
-  
-  // Get the object key for the record id - batchId, recipeId, etc
-  // and the column name - BATCH ID, RECIPE ID, and so on...
-  var pageName = rowVals.tableId.substring(0,rowVals.tableId.indexOf('-'));
-  rowVals.recordObjectKey = pageName + 'Id';
-  
-  
-  var newRow = rowVals.isNew;
-  var deleteRow = rowVals.isDelete;
-  var updateRow = rowVals.isUpdate;
-  
-  // Determine if this row should be updated/deleted/added
-  if (newRow) {
-  
-    if (deleteRow) return true; // don't do anything
-    else if (updateRow) appendSheetRow(rowVals,true); // append to sheet
-    rowVals.isNew = false;
-  }
-  else {
-  
-    if (deleteRow) deleteRowInTablesSheet(rowVals); // find and delete
-    else if (updateRow) updateRowInTablesSheet(rowVals); // find and replace row values
-  }
-  
-  // Return row object, so the "isNew" field can be removed from the table
-  return JSON.stringify(rowVals);
-}
-
-
-
-
-/**
-* Updates entire row from table. Needs sheet name, record Id, and row object to match object keys to column names
-*
-* @param obj {object} JSON object of table row data from client-side
-*
-* return nothing
-*/
-function updateRowInTablesSheet(obj){
-  var sheet = dbConn().getSheetByName(obj.dbName);
-  var data = sheet.getDataRange().getValues();
-  var header = normalizeHeaders_(data[0]);
-  var recordIndex = header.indexOf(obj.recordObjectKey);// BATCH/RECIPE ID INDEX
-  var idIndex = header.indexOf('id');
-  var recordId = obj[obj.recordObjectKey];
-  var output = [];
-  var row = 0;
-  
-  // Create output array by matching object keys to destination header indices
-  for (var [key,val] in obj){
-    output[header.indexOf(key)] = val;
-  }
-  // Remove null values in the event there is a random column in the table
-  output = removeNull_(output);
-  
-  // Search data and match unique id and record id to get the sheet's row number
-  for (var i=0;i<data.length;i++){
-    if (data[i][idIndex] === obj.id && data[i][recordIndex] === recordId) {
-        row = i+1;
-        break;
-    }
-  }
-  
-  // If row is less than 1, no match was found.
-  // Could be because a row was deleted, or because a new row failed to append. Now it's trying to update
-  // So append a new row
-  if (row < 1) {
-    sheet.appendRow(output);
-    return;
-  }
-  
-  // Put row values into sheet
-  sheet.getRange(row,1,1,output.length).setValues([output]);
-}
-
-
-
-
-/**
-* Removes null values from array and replaces them with blanks
-*
-* @param array {array} 1D array
-*
-* return {array}
-*/
-function removeNull_(array){
-    for (var i = 0; i < array.length;i++){
-      !array[i] ? array[i]='' : null;
-    }
-    return array;
-}
-
-
-
-
-
-
-/**
-* Finds the matching record within a table and deletes it
-*
-* @param obj {object} JSON object of table row data from client-side
-*
-* return nothing
-*/
-function deleteRowInTablesSheet(obj){
-Logger.log('delete')
-  var sheet = dbConn().getSheetByName(obj.dbName);
-  var data = sheet.getDataRange().getValues();
-  var header = normalizeHeaders_(data[0]);
-  var recordIndex = header.indexOf(obj.recordObjectKey);// BATCH/RECIPE ID INDEX
-  var idIndex = header.indexOf('id');
-  var recordId = obj[obj.recordObjectKey];
-  var row = 0;
-  
-  // Search data and match unique id and record id to get the sheet's row number
-  for (var i=0;i<data.length;i++){
-    if (data[i][idIndex] === obj.id && data[i][recordIndex] === recordId) {
-        row = i+1;
-        break;
-    }
-  }
-  Logger.log(row);
-  // If row is less than 1, stop
-  // In case someone already deleted the row
-  if (row < 1) return;
-  
-  // Delete specified row
-  sheet.deleteRow(row)
-}
-
-
-
-
-
-
-
-/**
-* appendSheetRow
-*
-* Appends a row to a sheet
-
-* @param rowObject {object} The row values to be appended. Contains all relevant data including sheet name
-*
-* return nothing
-*/
-function appendSheetRow(obj) {
-Logger.log('append')
- var sheet = dbConn().getSheetByName(obj.dbName);
-  var data = sheet.getDataRange().getValues();
-  var header = normalizeHeaders_(data[0]);
-  var output = [];
-  
-  // Create output array by matching object keys to destination header indices
-  for (var [key,val] in obj){
-    output[header.indexOf(key)] = val;
-  }
-  // Remove null values in the event there is a random column in the table
-  output = removeNull_(output);
-  
-  try{
-  // Append row to sheet
-  sheet.appendRow(output);
-  } catch(e){Logger.log(e)};
+function getClientTimeZone_(accessObject){
+  return conn_().getStoredInfo(accessObject).settings.timezone;
 }

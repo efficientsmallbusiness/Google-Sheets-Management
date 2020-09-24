@@ -1,149 +1,216 @@
-
+<script> // this tag is removed when the page is loaded
  
+ // Page load
+$(function() {
+ 
+ $('.selectpicker').selectpicker('render'); // There's an unknown issue with the select statement loading, and this fixes it
+
+    memory_.loadedRecordSheetTableName = 'batch';
+    var id = memory_.loadedRecordId;
+    if (id) {
+   //   getPageData_('batch',id);
+      $('#batchHeader3').append(' #'+id);
+    }
+      
+     
+     createEventHandlers(); 
+ })
+  
   /*------------------------------------------------------------------------------------*/
   /*********************************** EVENT HANDLERS ***********************************/
   /*------------------------------------------------------------------------------------*/
   
   
+  var createEventHandlers = function () {
   
-
- // Page load
- $(function() {
+    // New Batch button event
+    $('#createNewBatchBtn').click(function(){
+      $('#batchHeader3').html('BATCH');
+      createNewPageRecord({sheetName:'batch',headerId:'batchHeader3'},'batch');
+    });
     
-    var id = memory_.loadedRecordId;
-    if (id) {
-      console.log(`The record "${id}" will be loaded`);
-      getBatchData(id);
-    }
+    // Back to batches list
+    $('#backToBatchesBtn').click(function(){
+      getPage('batchList');
+    });
+   
+   // Unhide the "starter details section"
+    $('#showStarterDetails').click(function(){
+       if($(this).is(":checked")){
+         $('#starterDetails').show();
+       } else {
+         $('#starterDetails').hide();
+       }
+    })
+    
+    $('#recipeId').click(function(){
+      const recipeId = $(this).html();
+      if (recipeId.indexOf('Recipe') > -1) return;
+      getPage( pageToLoad(recipeId) ,recipeId);
+    });
+    
+    // Save the ferment modal values
+    $('#saveFermentDetails').click(function(){
       
+      var output = {};
+      $('[data-ferment-modal-id]').each(function () {
+            var modalElem = $(this);
+            var elemId = modalElem.attr('data-ferment-modal-id');
+            
+            output[elemId] = modalElem.val();
+            
+        });
+        
+      // Update UI table
+      const fermentTableDetails = memory_.fermentTableHelper;
+      $('#'+fermentTableDetails.id).bootstrapTable('updateRow', {
+        index: fermentTableDetails.index,
+        row: output
+      })
       
-      $('#showStarterDetails').click(function(){
-          if($(this).is(":checked")){
-            $('#starterDetails').show();
-          } else {
-            $('#starterDetails').hide();
+      output.sheetName = 'ferment_details'; // The sheet to save to
+      
+      // Update database table
+      updateDatabase_(output,'update');
+    });
+    
+    
+    $('#test').click(function(){
+    
+    
+//    const steps = ['1', '2', '3']
+//const swalQueueStep = Swal.mixin({
+//  confirmButtonText: 'Forward',
+//  cancelButtonText: 'Back',
+//  progressSteps: steps,
+//  input: 'text',
+//  inputAttributes: {
+//    required: true
+//  },
+//  reverseButtons: true,
+//  validationMessage: 'This field is required'
+//})
+//
+//async function backAndForth () {
+//  const values = []
+//  let currentStep
+//
+//  for (currentStep = 0; currentStep < steps.length;) {
+//    const result = await swalQueueStep.fire({
+//      title: 'Question ' + steps[currentStep],
+//      inputValue: values[currentStep],
+//      showCancelButton: currentStep > 0,
+//      currentProgressStep: currentStep
+//    })
+//
+//    if (result.value) {
+//      values[currentStep] = result.value
+//      currentStep++
+//    } else if (result.dismiss === 'cancel') {
+//      currentStep--
+//    } else {
+//      break
+//    }
+//  }
+//
+//  if (currentStep === steps.length) {
+//    Swal.fire(JSON.stringify(values))
+//  }
+//}
+//
+//backAndForth()
+//return;
+    
+// Select if you want to load a recipe or create a new one
+// If load a recipe
+// - show a select option with all the recipe ids with the description
+// - get the recipe data from the database then load the data
+// If new recipe
+// - Get the type (mead, cider, etc)
+// - Brief description (basic ingredients)
+// - Create new row in database and input the new recipe id
+// - default recipe status is "concept"
+      Swal.fire({
+        title: 'Recipe',
+        input: 'radio',
+        inputOptions: {
+            'load': 'Load',
+            'new': 'Create New'
+          },
+        inputValidator: (value) => {
+          if (!value) {
+            return 'Make a selection'
           }
-       })
-       
-    refreshSelectElements(); 
-    createNewRowEventTrigger();
+        }
+      }).then((result) => {
+      console.log(JSON.stringify(result));
+      
+        if (result.value == 'load') {
+          // Show drop down list with recipes
+        } else if (result.value == 'new') {
+          // Ask questions to create new recipe
+        } else if (result.isDismissed) {
+          // Let user know they need to make a selection or do something else
+        }
+      //  
+      //    Swal.fire(
+      //      'Deleted!',
+      //      'Your file has been deleted.',
+      //      'success'
+      //    )
+      //  }
+      })
+
+     // loadABatch();
+    });
+    
+    
+    // Handles saving tables values
+    createNewTableRowEventTrigger();
+    // Handles saving input values
     createOnChangeTrigger();
-     
-  })
+  }
   
-  
+ 
   /*-------------------------------------------------------------------------------------*/
   /***********************************    FUNCTIONS    ***********************************/
   /*-------------------------------------------------------------------------------------*/
 
-
-
-// Get batch data from server
-function getBatchData(recipeId){
-  google.script.run.withSuccessHandler(processPageData).getPageData(memory_.user.company,'batch',recipeId);
-}
-  
-  
-  
-  
-function getBatchList(){
-
-  var batchList = memory_.lists.batchList;
-  
-  // If the user has not refreshed the page
-  // The batch list should still be in the temporary data variable
-   if (batchList) {
-     fillBatchOptions(batchList);
-     return;
-   };
-   
-   google.script.run.withSuccessHandler(fillBatchOptions).getBatchList();
-}
-  
-  
-  
-
-
-
-//// Fill options list for batch select element
-//function fillBatchOptions(optionsArray){
-//  var batchOptions;
-//  
-//  // If the array is an object, it is coming from the server
-//  // Otherwise, it's a string with html options
-//  if(typeof optionsArray !== 'object') 
-//    batchOptions = convertOptionsArray(optionsArray,memory_.activePage);
-//   else 
-//    batchOptions = optionsArray;
-//  
-//  // Append options to batch select element
-//  fillHtmlSelect('#batchSelector',batchOptions);
-//  
-//  
-//  // Show selector and get data from server if there is already a batch id selected
-//  loadBatch();
-//  
-//  // Hide pre-loader
-//  $("#indexLoader").hide();
-//  
-//  // Store batchOptions as a temporary variable
-//  memory_.lists.batchOptions = batchOptions;
-//}
-//
-//
-//
-//
-//
-//
-//  
-//// Load batch selector element
-//// If necessary, load batch data for page
-//function loadBatch(){
-//
-//  var batchId = setBatchSelectOption();
-//
-//    if (!batchId) return;
-//    getBatchData(batchId);
-//    
-//    return;
-//  
-//  
-//}
-//
-//
-//
-//
-///**
-//* Gets the current batch id from the temporary storage object
-//* and sets it as the selected option in the batch select element
-//*
-//* If there is no current batch id, returns undefined.
-//*
-//* returns {string} batch id
-//*/
-//function setBatchSelectOption(){
-//   // Check if a batch id has already been used
-//    // This will allow the user to navigate back and forth through pages 
-//    // without having to re-select the batch
-//    var batchId = getBatchId();
-//   
-//   
-//    if (!batchId) {
-//      return;
-//    }
-//  
-//    // the batch id is also the elements id
-//    var selectItem = $("option[data-id='" + batchId +"']");
-//    
-//    // Get index of batch id in batch select
-//    var index = $("option").index(selectItem);
-//    
-//    // Get value of the option by it's index
-//    var selectedValue = $("#batchSelector").children().eq(index).val();
-//    
-//    // Set value in select element
-//    // Utilizes the bootstrap-select library to set the selected value
-//    $('#batchSelector').selectpicker('val', selectedValue);
-//    
-//    return batchId;
-//}
+var loadABatch = function() {
+      Swal.mixin({
+        input: 'text',
+        confirmButtonText: 'Next &rarr;',
+        showCancelButton: true,
+        progressSteps: ['1', '2', '3']
+      }).queue([
+        {
+          title: 'Question 1',
+          text: 'Chaining swal2 modals is easy',
+          input: 'select',
+          inputOptions: {
+            'Fruits': {
+              apples: 'Apples',
+              bananas: 'Bananas',
+              grapes: 'Grapes',
+              oranges: 'Oranges'
+            }},
+          inputPlaceholder: 'Select a fruit',
+        },
+        'Question 2',
+        'Question 3'
+      ]).then((result) => {
+        if (result.value) {
+          const answers = JSON.stringify(result.value);
+          //do something
+          Swal.fire({
+            title: 'All done!',
+            html: `
+              Your answers:
+              <pre><code>${answers}</code></pre>
+            `,
+            confirmButtonText: 'Lovely!'
+          });
+          
+        }
+      })
+    };

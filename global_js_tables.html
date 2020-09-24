@@ -89,140 +89,59 @@
   
   
   /**
-  * "newRow" button click. A
+  * "newRow" button click. 
+  * @return {callback function} calls server-side function "getRowId" and returns response to client-side function "newTableRow"
   */
-  function createNewRowEventTrigger(){
+  function createNewTableRowEventTrigger(){
       // Because this event trigger is created when a new file is loaded
       // It is most likely creating multiple event triggers
       // So I included ".off('click')" to remove any triggers that may exist
-      $(".newRow").off('click').click(function(e){
-       
-       newTableRowEvent(e);
-        
-     });
+      $(".newRow").off('click').click(function(){
+          const output = {};
+          const btnId = this.id
+          const loadBtn = "#"+btnId+"-loading";
+          $(this).hide();
+          $(loadBtn).show();
+          
+          output.btnId = btnId; // Add button id to output, so the loading icon can be hidden and the button unhidden from the callback function
+          output.loadedRecordId = memory_.loadedRecordId; // Get the current id of whatever file is active. batch, recipe, etc...and add it to the output object
+          output.sheetName = this.dataset.savetableto;
+    
+           // Get the next available id from the server.
+          // The output object is passed through, so it can be used in the newTableRow function
+          createNewSheetRecord_(addNewTableRow,output,'row');
+       });
  }
   
   
   
   
-
-  /**
-  * Is triggered on "newRow" button click event
-  *
-  *
-  * The button click events must remain with their respective files (instead of here)
-  * Because the event handler needs to be created after the DOM element
-  * otherwise it doesn't work. (this doesn't seem to be true of the Bootstrap tables
-  *
-  * @param el {DOM Element} Button
-  *
-  * return {callback function} calls server-side function "getRowId" and returns response to client-side function "newTableRow"
-  */
-  function newTableRowEvent(el) {
-       var btnId = el.target.id;
-       
-       var index = btnId.indexOf('-');
-      // The table name that the button is attached to
-      var btnTable = btnId.substring(index+1,btnId.length);
-      
-      var saveBtn = el.target;
-      var loadBtn = "#"+btnId+"-loading";
-      
-      $(saveBtn).hide();
-      $(loadBtn).show();
-      
-      var output = {};
-      
-      // Determine which button was clicked
-      // Then get the button's id
-      // If it's an ingredient/additive table
-      // Get what type of item it is
-      switch(btnTable) {
-        case 'ingrBtn':
-          output.tableId = '#'+TABLES.ingredient.id;
-          output.type = 'ingredient';
-          break;
-        case 'addtvBtn':
-          output.tableId = '#'+TABLES.additive.id;
-          output.type = 'additive';
-          break;
-        case 'lossBtn':
-          output.tableId = '#'+TABLES.loss.id;
-          break;
-        case 'fermentBtn':
-          output.tableId = '#'+TABLES.ferment.id;
-          break;
-        case 'blendBtn':
-          output.tableId = '#'+TABLES.blend.id;
-          break;
-        default:
-          break;
-      }
-      
-      // Add button id to output, so the loading button can be hidden and the regular can be shown from the callback function
-      output.btnId = btnId;
-      
-      // Get the current id of whatever file is active. batch, recipe, etc...
-      // and add it to the output object
-      output[CURRENT_PAGE+'Id'] = getSelectedRecord();
-
-      // Check if ui lists have been loaded. If not, get them from the server
-      // The inventory/ingredient list is in the ui lists, so if it's not here, none of them are
-      uiListExists('ingredient');
-          
-      // If there isn't a batch loaded, alert user
-      if (!output[CURRENT_PAGE+'Id']) {
-        // There should always be a batch
-        alert('You must select or create a new recipe');
-        return;
-      };
-  
-      // Get the next available id from the server.
-      // The output object is passed through, so it can be used in the newTableRow function
-      google.script.run.withSuccessHandler(newTableRow).getRowId(JSON.stringify(output));
-  }
+  var createNewSheetRecord_ = function (callBack,sheetValuesObject,type) {
+      google.script.run.withSuccessHandler(callBack).createNewSheetRecord(memory_.user.company,sheetValuesObject,type);
+  };
   
   
-  
-  
-  // Check if ui lists have been loaded. If not, get them from the server
-  function uiListExists(listName){
-    if (memory_.lists[listName]) return;
-    google.script.run.withSuccessHandler(separateUiListsAndConvertToHtml).getPageData(memory_.user.company,"UI_LISTS");
-  }
- 
   
   
   
   
   /**
   * Add a new row to a table
-  * This functioned is a callback function for "newTableRowEvent"
+  * This is the callback function for "newTableRowEvent"
   * @param responseObject {object} Stringified JSON object passed from server-side
-  * @return none
   */
-  function newTableRow(responseObject){
+  function addNewTableRow(responseObject){
     var obj = JSON.parse(responseObject);
+    const rowId = 0;// Row id needs to be 0 to insert a new row at the top of the table
+    const tableId = obj.btnId.replace('btn','table');
+    const table = $('#'+tableId); // The table element being worked with
     
-    var fileName = CURRENT_PAGE;
+    table.bootstrapTable('prepend', obj.initialRowValues); // Insert new row into table - could use 'insertRow' instead of 'prepend' if you want to insert the new row at the bottom
+    table.bootstrapTable('scrollTo', 'top');// Set table view to top
     
-    // The object to be put back into the table
-    // The object will be filled with values below
-    var initialRowValues = {};
-    
-    // Check if the object contains an ingredient table
-    if (obj.tableId === '#'+TABLES.ingredient.id || obj.tableId === '#'+TABLES.additive.id) {
-        // Because the ingredient and additive data live in the same table, they have a parameter that denotes what type they are
-        initialRowValues.type = obj.type
-        // Record creation date. The other tables have a date field that can be edited. And we don't need to know exactly when they created the record for those things
-        initialRowValues.created = new Date(); 
-    }
-  
-    // These are mandatory fields for every table record
-    initialRowValues[fileName+'Id'] = getSelectedRecord(); // Selected batch or recipe id
-    initialRowValues.id = obj.id; // Generated record number
-    initialRowValues.isNew = true; // Let the server know this is a new row, so it will append a row instead of searching for existing record
-
+    // Hide the loading element and show the regular button element
+    $("#"+obj.btnId).show();
+    $("#"+obj.btnId+"-loading").hide();
     
     /**
     * This commented script gets the last row in the table, so a new row is inserted at the bottom
@@ -233,30 +152,9 @@
     *    rowId = rowId + 1;
     */
     
-    // Row id needs to be 0 to insert a new row at the top of the table
-    rowId = 0;
-    // Get the table object by id
-    // The id is stored in the object variable
-    var table = $(obj.tableId);
-    
-    // Insert new row into table
-    table.bootstrapTable('insertRow',{
-      index: rowId,
-      row: initialRowValues //initialRowValues is an array of JSON objects. This can be used to prefill row data
-    });
-    
-    // Set table view to top
-    table.bootstrapTable('scrollTo', 'top');
-    // Get the element of the clicked button
-    var btnId = obj.btnId;
-    
-    // Hide the loading element and show the regular button element
-    $("#"+btnId).show();
-    $("#"+btnId+"-loading").hide();
   }  
   
   
-
   /**
   * Create table icons
   * This is a bootstrap-table operation that automatically fills the specified table columns with the returned data
@@ -320,14 +218,10 @@
   
     var list = '';
     var htmlSelect = '';
-    
     // Get the appropriate list from the tableData object 
     list = memory_.lists[listName];
-    
-    // Inser the HTML string into the select statement
-   // htmlSelect = '<select class="form-control"><option selected>'+ cellValue +'</option>' + list + '</select>';
-    htmlSelect = '<input list="invent" autocomplete="off" class="dataList"><datalist id="invent"><option selected>'+ cellValue +'</option>' + list + '</datalist>';
-  
+  // Insert the HTML string into the select statement
+    htmlSelect = '<select class="form-control"><option selected>'+ cellValue +'</option>' + list + '</select>';
     // Insert html into table cell
     tableCell.html(htmlSelect);
   }
@@ -370,34 +264,10 @@
      // Get new input element
      var inputElem = tableCell.children('input');
      // Insert current cell value into input field
-     inputElem.val(cellValue);
+     inputElem.val(formatDate(cellValue));
   }
   
   
-  
-  /*
-  * @param tableId {string} Current table id
-  * @param id {string} The table id
-  * @param page {string} The page type is at the beginning of the id name "recipe-ingredientTable"
-  *
-  * Return {string} the spreadsheet tab name that matches the UI table name
-  */
-  function getDatabaseTableName(tableId,id,page){
-      
-      if (id === TABLES.ingredient.id || tableId === TABLES.additive.id) {
-          // If the page is "recipeDetail", then give a different table name
-          if (page === 'recipe') return 'table_RECIPE_DETAILS';
-          return 'table_INGREDIENT_USAGE';
-      }
-      else if (id === TABLES.loss.id)
-          return 'table_LOSS_LOG';
-        
-      else if (id === TABLES.ferment.id)
-           return 'table_FERMENT_LOG';
-           
-      else if (id === TABLES.blend.id)
-           return 'table_TRANSFER_LOG';
-  }  
     
   
   
@@ -433,34 +303,6 @@
     });
     
     
-    // datalist on change trigger
-    $(".dataList").on('input',function(e){
-      var t = $(this);
-      
-      console.log(t.children('option'));
-      var row = t.parent().parent();
-      var rowCells = row.children();
-      var uom = t.attr('data-uom');
-      
-      console.log(uom);
-      
-      if (!uom) return;
-      
-      $.each(colElems,function(ind,el){
-        // Get object key / data-field
-        var key = $(el).attr('data-field');
-       
-        // If the column data-field is "uom"
-        if (key === 'uom') {
-          // Get the row cell with the matching index of the uom column
-          var cell = rowCells[ind];
-          
-          // Insert uom from the selected drop-down menu
-          $(cell).text(uom);
-          
-        };
-      });
-    });
   }
   
   
@@ -489,8 +331,8 @@
   /**
   * This function handles the tasks when the edit icon is selected on a table
   */
-  function tableEditClick(th, e, value, row, index) {
-        var ths = $(th);
+  function tableEditClick(thisElem, e, value, row, index) {
+        var ths = $(thisElem);
         var table = ths[0].$el;
         // Add 1 to the index to get the current row, because the header is index 0
         var rowElem = table[0].rows[index+1];
@@ -506,58 +348,34 @@
         // Hide normal icons
         iconDiv.children(".normalIcon").hide();
       
-        // Get all td (row cells) elements of tr (table row)
-        var cells = $(rowElem).find('td');
-        // Loop through row columns and make them editable
-        cells.each (function(ind,cell) {
-            
-            // this
-            var t = $(this);
-            // Current cell value
-            var cellValue = t.text();
-            // Get the list of classes from the th element being looped over
-            var classes = colElems[ind].classList;
-            // Determine if cell needs an element inserted
-            
-            // Check if current column index is editable
-            if (!classes.contains('noEdit')) {
-            
-              // Check if an ingredient select box needs added
-              if (classes.contains('ingredientSelect')){
-                  // Create select element and insert cell value as selected item
-                  addSelectToCell(t,cellValue,'inventory');
-                  // Change the UoM of the adjacent cell
-                  changeUom(ths);
-              }
-              // Check if a loss select box needs added
-              else if (classes.contains('lossSelect')){
-                  // Create select element and insert cell value as selected item
-                  addSelectToCell(t,cellValue,'loss');
-              }
-              // Check if a batch select box needs added
-              else if (classes.contains('batchSelect')){
-                  // Create select element and insert cell value as selected item
-                  addSelectToCell(t,cellValue,'batch');
-              }
-              // Check if a number input element needs added
-              else if (classes.contains('numberInput')){
-                addNumberInput(t,cellValue);
-              }
-              // Check if a text input element needs added
-              else if (classes.contains('textInput')){
-                addTextInput(t,cellValue);
-              }
-              // Check if a date input element needs added
-              else if (classes.contains('dateInput')){
-                addDateInput(t,cellValue);
-              }
-             
-              // This function made the table row editable
-              // This is no longer used because input fields are created
-              // over the top of the cell, so the cell does not need to be editable
-             // makeRowEditable(t);
-            };
-        });  
+        $.each($(rowElem).children(),function (i) {
+           // const cellValue = $(this).first().val(); // not accurate
+          const el = $(this);
+          const colElem = $(colElems[i]);
+          const columnId = colElem.attr('data-field'); // Gets the header data-field value which is also the spreadsheet column header
+          const cellValue = row[columnId];
+          
+          if (!el.hasClass('noEdit')){
+            if (el.hasClass('ingredientSelect')) {
+              // Create select element and insert cell value as selected item
+              addSelectToCell(el,cellValue,'inventory');
+              // Change the UoM of the adjacent cell
+              changeUom(ths);
+            } else if (el.hasClass('lossSelect')) {
+              // Create select element and insert cell value as selected item
+              addSelectToCell(el,cellValue,'loss');
+            } else if (el.hasClass('batchSelect')) {
+              // Create select element and insert cell value as selected item
+              addSelectToCell(el,cellValue,'batch');
+            } else if (el.hasClass('numberInput')) {
+              addNumberInput(el,cellValue);
+            } else if (el.hasClass('textInput')) {
+              addTextInput(el,cellValue);
+            } else if (el.hasClass('dateInput')) {
+              addDateInput(el,cellValue);
+            } 
+          }
+         });
    }
    
    
@@ -567,151 +385,86 @@
    /**
   * This funcation handles the tasks when the confirmSave icon is selected on a table
   */
-   function tableConfirmSaveClick(th, e, value, row, index) {
-       // this could be useful for updating individual table rows
-       // https://examples.bootstrap-table.com/index.html#methods/update-by-unique-id.html
-        //or this
-        // $table.bootstrapTable('updateCellByUniqueId', {id: 3, field: 'name', value: 'Updated Name'}).
-        
-        
-        // this
-        var ths = $(th);
-        // Add 1 to the index to get the current row, because the header is index 0
-        var rowElem = ths[0].$el[0].rows[index+1];
-        
-        // Div containing the icons
-        var iconDiv = $(e.target).parent().parent();
-        // Left align the icons, so they fit in the cell
-        iconDiv.css( "text-align", "left");
-        
-        // Hide save icon
-        $(e.target).parent().parent().children(".saveIcon").hide();
-        // Show normal icons
-        var normalIcons = $(e.target).parent().parent().children(".normalIcon").show();
-        // Header row columns
-        var colElems = ths[0].$el[0].rows[0].children;
-        // Get all td elements of tr
-        var cells = $(rowElem).find('td');
-        
-        // Loop through row columns and make them not editable
-        cells.each (function(ind,cell) {
-        
-            // Get the list of classes from the th element being looped over
-            var classes = colElems[ind].classList;
-            
-            // Get the data-field from the colum header
-            // this value is used as the key in the row object
-            // There is probably a way to do this in Jquery, but I couldn't figure it out
-            var rowKey = colElems[ind].getAttribute('data-field').toString();
-          
-            updateTableCell($(this),classes);
+   function tableConfirmSaveClick(thisElem, e, value, row, index) {
+     var table = $(thisElem)[0].$el;
+     var rowElem = table[0].rows[index+1];// Add 1 to the index to get the current row, because the header is index 0
+     var colElems = table[0].rows[0].children;// Header row columns
+     var iconDiv = $(e.target).parent().parent();
+     var tableName = table.data('savetableto');
+     
+     row.sheetName = tableName;
+     
+     // Rearrange icons
+     iconDiv.css( "text-align", "left"); // Left align the icons, so they fit in the cell
+     $(e.target).parent().parent().children(".saveIcon").hide(); // Hide save icon
+     $(e.target).parent().parent().children(".normalIcon").show(); // Show normal icons
+     
+     $.each($(rowElem).children(),function (i,elem) {
+       const colElem = $(colElems[i]);
+       const columnId = colElem.attr('data-field'); // Gets the header data-field value which is also the spreadsheet column header
+       const td = $(this); // The table cell
+       const tableCellElem = td.children(); // The html input/select element inside the table cell // var inputElem = el.children('input'); // If I need to explicitly select the input box from the table cell
+       var newValue;
+       
+       // Check if the cell can be edited
+       if (td.hasClass('noEdit')) return;
+       
+       if (tableCellElem.is('select')){
+         newValue = tableCellElem.children('option:selected').val(); // The select element inside the table cell
+         // This implicitly removes the HTML element by replacing it with text
+         td.html(newValue);
+         row[columnId] = newValue; // Update the row object
          
-            // Update the row object using the row key and the text content of the current cell
-            // This is the JSON object that will be sent back to the server
-            // This must happen after the HTML element is converted to text
-            // Otherwise it won't find a value
-            row[rowKey] = rowElem.children[ind].textContent
-        });
-        
-        // Determine the database table name for the specific row
-        var tableId = ths[0].$el[0].id;
-        var id = tableId.toString();
-        var page = tableId.toString().substring(0,tableId.indexOf('-'));
-        var databaseTable = getDatabaseTableName(tableId,id,page);
-        
-        
-        // recordId or batchId, etc...
-        var recordKey = CURRENT_PAGE+'Id';
-        
-        
-        // Add table name to row object
-        row.dbName = databaseTable;
-        // Denote if this row should be updated
-        row.isUpdate = true;
-        // Add the table row index and table id, so the "isNew" value can be removed after the row is saved to the server
-        row.tableIndex = index;
-        row.tableId = tableId;
-        
-        
-        /**
-        * don't do anything if any of the following are true
-        *
-        * No qty, qty less than 0, no record id, no tableName
-        */
-        var rowQty = parseFloat(row.qty);
-        
-        if (rowQty >= 0 && 
-            rowQty !== '' && 
-            row.dbName && 
-            row[recordKey]) {
-          // Send row data to server to be updated/saved
-          
-          console.log('saving table row');
-          console.log(JSON.stringify(row));
-          google.script.run.withFailureHandler(rowSavingError).withSuccessHandler(removeIsNew).processRow(JSON.stringify(row));
-        }
-     }
-  
-  
-  
-    
+       } else {
+         
+         if (td.hasClass('dateInput')) {
+           newValue = formatDateAddDay(tableCellElem.val()); // Replace the input box html with the value from the input box. 
+         } else {
+           newValue = tableCellElem.val();
+         }
+         td.html( tableCellElem.val() ) // Replace the input box html with the value from the input box
+         row[columnId] = newValue; // Update the row object
+       }
+     });
+     
+     updateDatabase_(row,'update');
+   }
   
   
       /**
       * This funcation handles the tasks when the remove icon is selected on a table
       */
-      function tableRemoveClick(th, e, value, row, index) {
-        // this
-        var ths = $(th);
+      function tableRemoveClick(thisElem, e, value, row, index) {
         // Add 1 to the index to get the current row, because the header is index 0
-        var rowElem = ths[0].$el[0].rows[index+1];
+        var rowElem = $(thisElem)[0].$el[0].rows[index+1];
         var iconDiv = $(e.target).parent().parent()
         
-        // Show confirm/cancel delete icons
-        iconDiv.children(".deletingIcon").show();
-        // Hide edit/Delete icons
-        iconDiv.children(".normalIcon").hide();
+        iconDiv.children(".deletingIcon").show(); // Show confirm/cancel delete icons
+        iconDiv.children(".normalIcon").hide(); // Hide edit/Delete icons
       }
   
   
       /**
       * This funcation handles the tasks when the confirmDelete icon is selected on a table
       */
-      function tableConfirmDeleteClick(th, e, value, row, index){
-     
-       // this
-       var ths = $(th);
+      function tableConfirmDeleteClick(thisElem, e, value, row, index){
+        var table = $(thisElem)[0].$el;
+        var rowElem = table[0].rows[index+1];// Add 1 to the index to get the current row, because the header is index 0
+        var colElems = table[0].rows[0].children;// Header row columns
         var iconDiv = $(e.target).parent().parent();
-        // Hide confirm/cancel delete icons
-         iconDiv.children(".deletingIcon").hide();
-        // Show edit/delete icons
-        iconDiv.children(".normalIcon").show();
-        var thisTable = ths[0].$el;
-      
-        // Determine the database table name for the specific row
-        var tableId = thisTable[0].id;
-        var id = tableId.toString();
-        var page = tableId.toString().substring(0,tableId.indexOf('-'));
-        var recordId = page + 'Id';
-        var databaseTable = getDatabaseTableName(tableId,id,page);
+        var tableName = table.data('savetableto');
         
-        // Add table name to row object
-        row.dbName = databaseTable;
-        // Denote if this item should be deleted
-        row.isDelete = true;
-        row.tableId = tableId;
+        row.sheetName = tableName; // Add spreadsheet name for the server
+        
         // Remove table row
-        thisTable.bootstrapTable('remove', {
+        table.bootstrapTable('remove', {
           field: 'id',
           values: [row.id]
         })
         
-        console.log('delete confirmed');
-        console.log('Check for row id, batch id, and table name');
-        console.log(JSON.stringify(row));
-        
+        updateDatabase_(row,'delete');
         // Send row data to server to be deleted
-          google.script.run.withFailureHandler(rowSavingError).withSuccessHandler().processRow(JSON.stringify(row));
+        //  google.script.run.withFailureHandler(rowSavingError).withSuccessHandler().processTableRow(JSON.stringify(row));
       }
 
 
@@ -738,26 +491,53 @@
     * This funcation handles the tasks when the view icon is selected on a table
     */
     function tableViewClick(ths, e, value, row, index) {
+      var table = $(ths)[0].$el;
+      // Store the table ID in temp memory, so it can be recalled when saving the fermentation data
+      memory_.fermentTableHelper = {id:table.attr('id'),index:index};
        // Clear fillable modal elements
        $('[data-ferment-modal-id]').val(''); 
        
        // Loop through the modal input elements
        $('[data-ferment-modal-id]').each(function () {
             var modalElem = $(this);
-            var modalId = modalElem.attr('data-ferment-modal-id');
+            var elemId = modalElem.attr('data-ferment-modal-id');
+            var elemType = modalElem.attr('type');
             
             // Loop over the table row values
             for (var key in row) {
+              var val = row[key];
+              
                // If the row object key equals the modal's data attribute, insert the value into the input element
-               if (modalId.toString() === key.toString())
+               if (elemId.toString() === key.toString())
                    if (modalElem.is( "h5" )){
-                   modalElem.text(row[key]);
+                   modalElem.text(val);
                    } else {
-                     modalElem.val(row[key]);
+                     if (elemType == 'date') {val = formatDateAddDay(val)};
+                     modalElem.val(val);
                    }
              }
             
         });
+       
+       
+       /*
+       var elemId = modalElem.attr('data-ferment-modal-id');
+            var elemType = modalElem.attr('type);
+            console.log(elemType)
+            // Loop over the table row values
+            for (var key in row) {
+              var val = row[key];
+              
+               // If the row object key equals the modal's data attribute, insert the value into the input element
+               if (elemId.toString() === key.toString())
+                   if (modalElem.is( "h5" )){
+                   modalElem.text(val);
+                   } else {
+                     if (elemType == 'date') {val = formatDate(val)};
+                     modalElem.val(val);
+                   }
+             }
+             */
        
        
        /** 
@@ -772,72 +552,6 @@
        
     }
     
-    
-    
-    
-    
-    /**
-    * Determine element tag is used then get the value and update the table cell
-    *
-    * @param td {DOM element} 'td' element within a table
-    * @param classes {DOM element array} JQUERY classlist
-    */
-     function updateTableCell(td,classes){
-            var textValue = '';
-            
-            var tableCellElem = td.children();
-            
-            if (tableCellElem.is('select')){
-               textValue = tableCellElem.children('option:selected').val();
-               // This implicitly removes the HTML element by replacing it with text
-               td.html(textValue);
-            }
-            else if (tableCellElem.is('datalist')) {
-              textValue = tableCellElem.val();
-              console.log(textValue);
-              td.html(textValue);
-            }
-            else if (tableCellElem.is('input')){
-              // Get input element's value
-              textValue = tableCellElem.val();
-              // This implicitly removes the HTML element by replacing it with text
-              td.html(textValue);
-            }
-            
-            return;
-       }
-    
-    
-    
-    
-    
-    
-    
-    
-    /**
-    * removeIsNew
-    *
-    * Updates row values after removing the "isNew" object. I wasn't able to find another method for doing this
-    * so this gets all of the row values, deletes the "isNew" key, then updates the table row
-    *
-    * @param json {object} JSON object that is passed as a callback response from "tableConfirmSaveClick"
-    */
-    function removeIsNew(json){
-       var rowObj = JSON.parse(json);
-       // If the isNew variable persists. any other updates to this row (before the page is reloaded) will append a new row instead of updating the already saved row
-       var table = $('#'+rowObj.tableId);
-       
-       table.bootstrapTable('updateRow', {
-            index: rowObj.tableIndex,
-            row: rowObj,
-        })
-        
-    }
-    
-
-  // Alert user that a save attempt failed when updating a table
-  function rowSavingError(){
-    customAlert_('error','An attempt to save to the record failed. Refresh the page and try again.');
-  }
    
+  
 </script>

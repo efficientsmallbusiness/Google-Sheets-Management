@@ -1,15 +1,26 @@
 <div class="container">
 
-<div>
-  <div class="float-left">
-    <button class="btn btn-secondary btn-sm" id="backToRecipesBtn">
-    <i class="fa fa-caret-left"></i> Recipes
-    </button>
+
+
+<div class="col-12" style="margin-bottom:10px;">
+  <div>
+    <div class="float-left">
+      <button class="btn btn-secondary btn-sm" style="margin-top:5px;" id="backToRecipesBtn">
+      <i class="fa fa-caret-left"></i> Recipes
+      </button>
+    </div>
+    <label class="sectionHeader">
+      <h3 style="display: inline-block;padding-left:15px;" id="recipeHeader3">RECIPE</h3> 
+    </label>
   </div>
-  <label class="sectionHeader">
-    <h3 style="display: inline-block;padding-left:15px;">RECIPE DETAILS</h3> 
-  </label>
+  
+  <div class="float-right">
+    <button type="button" class="btn btn-primary detailBtns" id="createNewRecipeBtn" >New recipe</button>   
+  </div>
+  
+  <span class="bottom-border"></span>
 </div>
+
 
   <div class="text-center fileLoadingSpinner">
     <div class="spinner-grow text-info" role="status">
@@ -23,8 +34,8 @@
         <div class="col-12 ">
           
           <div class="float-right detailBtns">
-            <button type="button" class="btn btn-primary" id="batchSaveBtn">Save</button>
-            <button type="button" class="btn btn-outline-secondary " id="createNewBatchBtn" disabled>New recipe</button>   
+            <button type="button" class="btn btn-primary" id="recipeSaveBtn">Save</button>
+            <button type="button" class="btn btn-outline-secondary " id="createNewRecipeBtn">New recipe</button>   
           </div>
         </div>
         
@@ -43,13 +54,13 @@
                 <div class="col-12 col-md-5">
                     <div class="form-group">
                         <label for="recipeName">Product Name</label>
-                        <input class="form-control save-field recipe-input" type="text" name="recipeName" id="recipeName" required=""  >
+                        <input class="form-control" data-saveTo="recipe" type="text" name="recipeName" id="recipeName" required=""  >
                     </div>
                 </div>
                 <div class="col-12 col-md-7">
                     <div class="form-group">
                         <label for="shortDescription">Short description</label>
-                        <input class="form-control save-field recipe-input" type="text" maxlength="50" name="shortDescription" id="shortDescription" required=""  >
+                        <input class="form-control" data-saveTo="recipe" type="text" maxlength="50" name="shortDescription" id="shortDescription" required=""  >
                     </div>
                 </div>
                 
@@ -60,7 +71,7 @@
                 <div class="col-6 col-lg-3">
                     <div class="form-group">
                         <label for="alcType">Alc. type</label>
-                        <select id="alcType" class="form-control save-field selectpicker"   title="Please select..." name="alcType">
+                        <select id="alcType" class="form-control selectpicker" data-saveTo="recipe" title="Please select..." name="alcType">
                           <option>MEAD</option>
                           <option>CIDER</option>
                           <option>WINE</option>
@@ -71,7 +82,7 @@
                 <div class="col-6 col-lg-3">
                     <div class="form-group">
                         <label for="recipeStatus">Status</label>
-                        <select id="recipeStatus" class="form-control save-field selectpicker"  title="Please select..." name="recipeStatus"  >
+                        <select id="recipeStatus" class="form-control  selectpicker" data-saveTo="recipe"  title="Please select..." name="recipeStatus"  >
                           <option>CONCEPT</option>
                           <option>DEVELOPING</option>
                           <option>ACTIVE</option>
@@ -82,7 +93,7 @@
                 <div class="col-3 col-lg-2">
                     <div class="form-group">
                         <label for="carbonated">Carb.</label>
-                        <select id="carbonated" class="form-control save-field selectpicker"  title="Select" name="carbonated"  >
+                        <select id="carbonated" class="form-control  selectpicker" data-saveTo="recipe"  title="Select" name="carbonated"  >
                           <option value="Yes">Yes</option>
                           <option value="No">No</option>
                         </select>
@@ -90,7 +101,7 @@
                 </div>
                 <div class="form-group col-3 col-md-2 float-right">
                     <label for="gPerMl">g CO2/100ml</label>
-                    <input class="form-control save-field recipe-input" type="text" name="gPerMl" id="gPerMl" required=""  >
+                    <input class="form-control" data-saveTo="recipe" type="text" name="gPerMl" id="gPerMl" required=""  >
                 </div>
             
             </div><!-- END NESTED ROW -->
@@ -106,11 +117,11 @@
                     </div>
                     <div class="col-10 form-group">
                         <label for="startGravity">Start</label>
-                        <input class="form-control save-field" type="number" min="0" step="0.001" name="startGravity" id="startGravity" value="1.12" required=""  >
+                        <input class="form-control" data-saveTo="recipe" type="number" min="0" step="0.001" name="startGravity" id="startGravity" value="1.12" required=""  >
                     </div>
                     <div class="col-10 form-group">
                         <label for="endGravity">End</label>
-                        <input class="form-control save-field" type="number" min="0" step="0.001" name="endGravity" id="endGravity" value="1.012" required=""  >
+                        <input class="form-control" data-saveTo="recipe" type="number" min="0" step="0.001" name="endGravity" id="endGravity" value="1.012" required=""  >
                     </div>
                     
                 </div>
@@ -124,11 +135,11 @@
                     </div>
                     <div class="col-10 form-group">
                         <label for="startBrix">Start</label>
-                        <input class="form-control save-field" type="number" min="0" step="0.001" name="startBrix" id="startBrix" value="28.08" required=""  >
+                        <input class="form-control" data-saveTo="recipe" type="number" min="0" step="0.001" name="startBrix" id="startBrix" value="28.08" required=""  >
                     </div>
                     <div class="col-10 form-group">
                         <label for="endBrix">End</label>
-                        <input class="form-control save-field" type="number" min="0" step="0.001" name="endBrix" id="endBrix" value="5.08" required=""  >
+                        <input class="form-control" data-saveTo="recipe" type="number" min="0" step="0.001" name="endBrix" id="endBrix" value="5.08" required=""  >
                     </div>
                     
                 </div>
@@ -142,11 +153,11 @@
                     </div>
                     <div class="col-10 form-group">
                         <label for="abvBase">Base</label>
-                        <input class="form-control save-field" type="number" min="0" step="0.001" name="abvBase" id="abvBase" value="13.50" required=""  >
+                        <input class="form-control" data-saveTo="recipe" type="number" min="0" step="0.001" name="abvBase" id="abvBase" value="13.50" required=""  >
                     </div>
                     <div class="col-10 form-group">
                         <label for="abvFinal">Final</label>
-                        <input class="form-control save-field recipe-input" type="text" name="abvFinal" id="abvFinal" required=""  >
+                        <input class="form-control" data-saveTo="recipe" type="text" name="abvFinal" id="abvFinal" required=""  >
                     </div>
                     
                 </div>
@@ -164,7 +175,7 @@
               
                   <div class="col-12">
                       <div class="form-group">
-                        <textarea class="form-control save-field recipe-input" name="notes" id="notes"></textarea>
+                        <textarea class="form-control" data-saveTo="recipe" name="notes" id="notes"></textarea>
                       </div>
                   </div>
                   
@@ -192,18 +203,18 @@
                   <div class="col-12 col-md-12">
                       <div class="form-group">
                           <label for="cola">COLA</label>
-                          <input class="form-control save-field recipe-input" type="text" name="cola" id="cola" required=""   >
+                          <input class="form-control" data-saveTo="recipe" type="text" name="cola" id="cola" required=""   >
                       </div>
                   </div>
                   <div class="col-6">
                   
                       <div class="form-group">
                           <label for="formulaSubmitted" style="">Formula submitted</label>
-                          <input class="form-control save-field recipe-input" type="date" name="formulaSubmitted" id="formulaSubmitted" required=""  >
+                          <input class="form-control" data-saveTo="recipe" type="date" name="formulaSubmitted" id="formulaSubmitted" required=""  >
                       </div>
                       <div class="form-group">
                           <label for="formulaApproved">Formula approved</label>
-                          <input class="form-control save-field recipe-input" type="date" name="formulaApproved" id="formulaApproved" required=""  >
+                          <input class="form-control" data-saveTo="recipe" type="date" name="formulaApproved" id="formulaApproved" required=""  >
                       </div>
                       
                   </div>
@@ -211,11 +222,11 @@
                       
                       <div class="form-group">
                           <label for="labelSubmitted">Label submitted</label>
-                          <input class="form-control save-field recipe-input" type="date" name="labelSubmitted" id="labelSubmitted" required=""  >
+                          <input class="form-control" data-saveTo="recipe" type="date" name="labelSubmitted" id="labelSubmitted" required=""  >
                       </div>
                       <div class="form-group">
                           <label for="labelApproved">Label approved</label>
-                          <input class="form-control save-field recipe-input" type="date" name="labelApproved" id="labelApproved" required=""  >
+                          <input class="form-control" data-saveTo="recipe" type="date" name="labelApproved" id="labelApproved" required=""  >
                       </div>
                       
                   </div>
@@ -232,19 +243,19 @@
                   <div class="col-12">
                       <div class="form-group">
                         <label for="notableDetails">Notable details</label>
-                        <textarea class="form-control save-field recipe-input"  id="notableDetails">It was aged for 900 years!</textarea>
+                        <textarea class="form-control" data-saveTo="recipe"  id="notableDetails">It was aged for 900 years!</textarea>
                       </div>
                   </div>
                   <div class="col-12">
                       <div class="form-group">
                         <label for="awards">Awards</label>
-                        <textarea class="form-control save-field recipe-input"  id="awards">1 Gold Star!</textarea>
+                        <textarea class="form-control" data-saveTo="recipe"  id="awards">1 Gold Star!</textarea>
                       </div>
                   </div>
                   <div class="col-6 col-md-6">
                       <div class="form-group">
                           <label for="created">Created</label>
-                          <input class="form-control save-field"  type="date" name="created" id="created" required=""   disabled>
+                          <input class="form-control" data-saveTo="recipe"  type="date" name="created" id="created" required=""   disabled>
                       </div>
                   </div>
               
@@ -263,16 +274,17 @@
         
           <div class="tableHeader addBtnDiv" style="background-color:#79897c;">
               <span style="padding-left:60px;">Ingredients</span>
-              <button type="button" id="recipe-ingrBtn" class="float-right btn btn-light newRow">ADD</button>
-              <button class="float-right btn btn-light loadingBtn newRow" id="recipe-ingrBtn-loading" type="button" disabled>
+              <button type="button" id="recipe-btn-ingredient" class="float-right btn btn-light newRow" data-saveTableTo="recipe_details">ADD</button>
+              <button class="float-right btn btn-light loadingBtn newRow" id="recipe-btn-ingredient-loading" type="button" disabled>
                   <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
                   <span class="sr-only">Loading...</span>
               </button>
           </div>
-        <table id="recipe-ingredientTable"
+        <table id="recipe-table-ingredient"
         data-height="200"
         data-toggle="table"
-        class="table-borderless table-sm">
+        class="table-borderless table-sm"
+        data-saveTableTo="recipe_details">
             <thead>
                 <tr>
                     <th data-field="ingredient" class="wideCol ingredientSelect" data-sortable="true">Ingredient</th>
@@ -282,7 +294,6 @@
                     <!-- Hidden columns -->
                     <!-- These are used for storing row data -->
                     <th data-field="id" data-visible="false"></th>
-                    <th data-field="batch" data-visible="false"></th>
                     <th data-field="type" data-visible="false"></th>
                     <th data-field="created" data-visible="false"></th>
                     <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" class="noEdit iconCol"></th>
@@ -301,17 +312,18 @@
           
           <div class="tableHeader addBtnDiv" style="background-color:#897c79;">
             <span style="padding-left:60px;">Additives</span>
-            <button type="button" id="recipe-addtvBtn" class="float-right btn btn-light newRow">ADD</button>
-            <button class="float-right btn btn-light loadingBtn newRow" id="recipe-addtvBtn-loading" type="button" disabled>
+            <button type="button" id="recipe-btn-additive" class="float-right btn btn-light newRow"  data-saveTableTo="recipe_details">ADD</button>
+            <button class="float-right btn btn-light loadingBtn newRow" id="recipe-btn-additive-loading" type="button" disabled>
                 <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
                 <span class="sr-only">Loading...</span>
             </button>
           </div>
           
-          <table id="recipe-additiveTable"
+          <table id="recipe-table-additive"
           data-height="200"
           data-toggle="table"
-          class="table-borderless table-sm">
+          class="table-borderless table-sm"
+          data-saveTableTo="recipe_details">
             <thead>
               <tr>
                 <th data-field="ingredient" class="wideCol ingredientSelect" data-sortable="true">Additive</th>

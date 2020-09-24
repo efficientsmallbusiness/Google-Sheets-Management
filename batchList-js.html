@@ -1,14 +1,27 @@
-  $(function(){
+<script> // this tag is removed when the page is loaded
+
+
+$(function(){
     $("#indexLoader").hide();
     loadTables('loading');
     getBatchList();
-    // Creates dblClick event for table
-    createDblClickEvent();
-   
+    
+   createEventHandlers();
     
   });
   
   
+var createEventHandlers = function () {
+  
+    // New Batch button event
+    $('#createNewBatchBtn').click(function(){
+    alert_('new batch');
+      //createNewPageRecord('batch');
+    });
+    
+    // Creates dblClick event for table
+    createDblClickEvent();
+}
   
 function getBatchList(){
   // If the user has not refreshed the page

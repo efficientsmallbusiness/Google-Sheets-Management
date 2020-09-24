@@ -65,6 +65,13 @@ function include(page,isPageLoad,recordId) {
     fileObject.recordId = recordId;
     return fileObject;
   }
+  
+  if (page == 'global_javascript') {
+    return [getScriptFile_('global_js'),
+             getScriptFile_('global_js_processServerData'),
+             getScriptFile_('global_js_tables')].join(''); 
+
+  }
   // If this isn't a page load, return the individual file
   return getScriptFile_(page);
 }
@@ -74,6 +81,7 @@ function include(page,isPageLoad,recordId) {
 * System required function to handle initial page load
 */
 const doGet = function (e = {}){
+  //return HtmlService.createHtmlOutputFromFile('test');
   const param = e.parameter;
   USER_OBJECT = getUser_().isValid();
   // If user isn't valid, load the login page

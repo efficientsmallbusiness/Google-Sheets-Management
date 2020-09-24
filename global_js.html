@@ -10,16 +10,16 @@
 * - 90 min script time
 * - 30 concurrent users (will only happen if multiple companies are using the same script
 */
-var memory_ = {activePage: '',
-               loadedRecordId: null,
+var memory_ = {activePage: null, // The name of the loaded page (ie home, batchList, recipeDetail, settings, etc)
+               loadedRecordId: null, // the ID of the loaded record (if available)
+               loadedRecordSheetTableName: null, // The spreadsheet table containing the primary data for the loaded record
                pages:{},// Html, js, css strings
-               pageData:{}, // arrays and object data
                lists:{// globally used lists
                  batchList:null,
                  recipeList:null,
                  batchOptions:null,
                },
-               user:{}
+               user:{} // Active user details
              };
 
     // Run when DOM is ready
@@ -38,8 +38,10 @@ var memory_ = {activePage: '',
        google.script.run.withSuccessHandler(logoutSuccess).userLogout();
      });
      
+     // Check if ui lists have been loaded. If not, get them from the server. The inventory/ingredient list is in the ui lists, so if it's not here, none of them are
+          uiListExists('ingredient');
       // Load the initial page
-      getPage(serverPayload.initPage);
+      getPage(serverPayload.initPage,serverPayload.recordId);
    }
  
  
@@ -59,6 +61,15 @@ var memory_ = {activePage: '',
   * @return {object} the script files for the selected page: html, js, css
   */
   function getPage(pageName,recordId) {
+    // Check if file exists in the temporary global variable
+    // If it exists, use the temporary data instead of calling the server
+    // The id is the file name
+    var file = memory_.pages[pageName];
+    if (file) {
+      file.recordId = recordId; // Give it the new id to load
+      showPage(file);
+      return;
+    }
     const isPageLoad = true;
     google.script.run.withFailureHandler().withSuccessHandler(showPage).include(pageName,isPageLoad,recordId);
   }
@@ -95,19 +106,22 @@ var memory_ = {activePage: '',
   function showPage(obj){
     var fileData = obj.fileData;
     var fileName = obj.fileName;
-    
+   
     // Load HTML
     $('#htmlOutput').html(fileData.html);
-    
+    var removeTags = function(string,tag){
+      return string.replace('<'+tag+'>','');
+    }
+     
     // Load css
     var css = document.createElement("style");
-    css.textContent = fileData.css;
+    css.textContent = removeTags(fileData.css,'style');
     $('head').append(css);
     
     // Load JS
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.textContent = fileData.js;
+    script.textContent = removeTags(fileData.js,'script');
     $('head').append(script);
     
     // Show header links if the loaded page is NOT "login"
@@ -123,17 +137,33 @@ var memory_ = {activePage: '',
       memory_.loadedRecordId = null;
     }
     
+    memory_.loadedRecordSheetTableName = null;//clear
     memory_.activePage = fileName;
     // Put file data into a global variable, so it can be recalled quickly
     memory_.pages[fileName] = obj; 
    
    }
    
+   /**
+   * Get recipe data from server
+   * @param {array} inputTables The Tables that populate the input fields
+   */
+  function getPageData_(sheetName,recordId){
+    google.script.run.withSuccessHandler(processPageData).getPageData(memory_.user.company,sheetName,recordId);
+  }
+   
+   
+  // Check if ui lists have been loaded. If not, get them from the server
+  function uiListExists(listName){
+    if (memory_.lists[listName]) return;
+    google.script.run.withSuccessHandler(separateUiListsAndConvertToHtml).getTableArray(memory_.user.company,"UI_LISTS");
+  }
+ 
   /**
   * Shows a custom alert letting the user know a server error occured
   */
-  function pageLoadError() {
-    customAlert_('error','A server error occured','Oops...');
+  function pageLoadError(e) {
+    customAlert_('error','A server error occured','Oops...'+ (e ? e : '') );
   }
    
    /**
@@ -160,16 +190,6 @@ var memory_ = {activePage: '',
         
         clearActiveHeader()
         
-        // Check if file exists in the temporary global variable
-        // If it exists, use the temporary data instead of calling the server
-        // The id is the file name
-        var file = memory_.pages[id];
-        
-        if (file) {
-          showPage(file);
-          return;
-        }
-        
         getPage(id);
       });
    
@@ -180,68 +200,61 @@ var memory_ = {activePage: '',
    
    
    
-   // Create an on change trigger for form fields for whichever file is loaded
-   // This allows form fields to automatically save when they are changed
+   /**
+   * Create an on change trigger for form fields for whichever file is loaded
+   * This allows form fields to automatically save when they are changed
+   */
    function createOnChangeTrigger(){
-   
-     // This needs to be bound to a specific class. because another class ("form-control") is already bound to select elements by one of the libraries
-     // explanation: https://stackoverflow.com/a/210345
-     // I didn't bind it to "select.save-field", because I want it to trigger on input fields as well
-     // And that would require more change events to manage
-     $('.save-field').off('change.save-field').on('change.save-field', function(e) {
-         var ths = $(this);
+ 
+     $('[data-saveTo]').off('change [data-saveTo]').on('change [data-saveTo]', function(e) {
+        const columnHeader = this.id; // The element ids should be a normalized version of the spreadsheet column headers
         
-       // The second trigger is coming from a DIV. This if statement catches any change triggers coming from a div
-        if (ths.prop("tagName") === 'DIV') return;
+        if (this.tagName === 'DIV') return; // There is a second change trigger coming from a DIV. This if statement catches any change triggers coming from a div
         
         // Check if there is a selected record
-        var currentRecord = getSelectedRecord();
-        if (!currentRecord) {
-          customAlert_('error','No record selected'); 
+        if (!memory_.loadedRecordId) {
+          customAlert_('error','No record selected. Refresh the page and try again.'); 
           return;
         }
         
-        var sheetName = memory_.tables[memory_.activePage].sheetName;
+        var recordId = this.dataset.recordId;
+        const output = {
+          sheetName: this.dataset.saveto,
+          id: recordId, // The spreadsheet row to update
+        };
         
-        // The element ids should be a normalized version of the spreadsheet ids
-        var columnName = ths.attr('id');
+        output[columnHeader] = getElementValue(this); // The column
         
-        var output = {
-          sheetName:sheetName,
-          record: currentRecord,
-          columnName: columnName,
-          value:ths.val(),
-          recordColumnName: memory_.activePage + 'Id',
-        }
-        
-        google.script.run.withFailureHandler(rowSavingError).updateRecord(JSON.stringify(output));
+        refreshSelectElements();
+        updateDatabase_(output,'update');
        });
      
    }
    
    
-   
-   
-   
    /**
-   * Gets the selected record from the select element at the top of the page
+   * Determines the type of element and returns the value
+   * @param {object} el The element
+   * @return {string}
    */
-   function getSelectedRecord(){
-     // Get record id from the temporary storage object
-     return memory_['current'+capitalizeFLetter(memory_.activePage)+'Id'];
-     // Get record id from the page's record select element at the top
-     //return $('#'+memory_.activePage+'Selector').children("option:selected").val();
+   var getElementValue = function (element) {
+     const el = $(element);
+     const elemType = el.attr('type');  
      
+     if (elemType == 'checkbox' || elemType == 'radio') return el.prop("checked") ? 'true' : 'false';
+     
+     return el.val();
    }
    
    
-   
-   
-   
-    function capitalizeFLetter(string) { 
-       return string[0].toUpperCase() + string.slice(1); 
-    } 
-   
+   /**
+   * Updates spreadsheet row value
+   * @param {object} sheetValuesObject
+    - The sheet object must contain the keys 'id' and 'sheetName'
+   */
+   var updateDatabase_ = function (sheetValuesObject,action) {
+     google.script.run.withFailureHandler(rowSavingError).updateDatabase(memory_.user.company,sheetValuesObject,action);
+   }
    
    
    
@@ -255,39 +268,22 @@ var memory_ = {activePage: '',
      $(".pageLnk").removeClass("active");
    }
    
-   
-   
-  
-  
-  // Testing this - it may need to be deleted in the future if I don't use it
-  function formatDateForInputField(value) {
-    var dt = new Date(value);
-    return dt.getFullYear( ) +'-'+ (dt.getMonth( ) + 1) + '-' + dt.getDate( );
-  }
 
 
 
 
-
-function fillHtmlSelect(elementId,htmlOptions){
-  // Add options and refresh selector
-  $(elementId).append(htmlOptions).selectpicker('refresh');
-  // Set initial value to nothing
-  $(elementId).selectpicker('val', '');
-}
-  
 
 
 function refreshSelectElements(){
-
   // This makes the select box work on IOS
   if (/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent)) {
-      $.fn.selectpicker.Constructor.DEFAULTS.mobile = true;
+    $('.selectpicker').selectpicker('mobile');
+     // $.fn.selectpicker.Constructor.DEFAULTS.mobile = true;
   }
   // When an item is placed within the same div as an element with the selectpicker class
   // The selects do not show
   // Refreshing them seems to fix this issue
-  $('select').selectpicker('refresh');
+  $('.selectpicker').selectpicker('refresh');
 }
 
 
@@ -296,15 +292,16 @@ function refreshSelectElements(){
  /**
  * Clear and enable all input/textarea/select elements
  */
- function clearInputElements(){
+ function clearInputElementsAndTables(){
  // Clear and enable input and textarea fields
    $('input.form-control, textarea.form-control').each(function(){
      var t = $(this);
      
-     // If the element id is "created" then don't enable it
-     if (t.attr('id') !== 'created') {
-        t.val('').removeAttr('disabled');
+     // If the element id is "id" or "created" then don't enable it
+     if (t.attr('id') !== 'created' && t.attr('id') !== 'id') {
+        t.removeAttr('disabled');
      }
+     t.val('');
    });
    
    // Clear checkboxes
@@ -312,17 +309,61 @@ function refreshSelectElements(){
   
    // Clear radio buttons
    $('input:radio').prop('checked', false);
+   
    // Activate first option and enable select fields
    $('select.form-control').each(function () {
        $(this).val(1).removeAttr('disabled').selectpicker('refresh');
    });
     
-    
+    // Clear tables
+     loadTables('new');
  }
 
 
 
+ 
+ 
+ var updateRecipeId = function (newId) {
+   console.log(`new id is ${newId}`);
+    memory_.loadedRecordId = newId;
+ }
 
+ /**
+ * Clears the page, creates a new id, and adds a timestamp
+ * @param {object} initObj The sheetName and header id
+ * @param {string} type The type of id to input - batch or recipe
+ */
+ function createNewPageRecord(initObj,type){
+ // clear all elements
+  clearInputElementsAndTables();
+  // Get new recipe id from server
+  createNewSheetRecord_(newPageCallback,initObj,type);
+   // Load tables with no data
+  
+  // If this is a new batch, it needs a recipe associated with it
+  if (type == 'batch') {
+  
+  }
+   // Display success message
+   toast_('Yay! A new '+type, 'success');
+ }
+
+  function newPageCallback(response){
+    const data = JSON.parse(response);
+    updateRecipeId(data.id);
+    var obj = {};
+    obj[data.sheetName] = data.initialRowValues; // The obj key must match the "data-saveTo" value, so the values are entered into the correct fields
+    loadFormFields(obj);
+    $('#' + data.headerId).html(data.sheetName.toUpperCase()+' #' + data.id);
+  }
+
+ // Alert user that a save attempt failed when updating a table
+ function rowSavingError(e){
+ console.log(e);
+   customAlert_('error','Error connecting to database. Refresh the page and try again.');
+ }
+   
+ 
  
  /**
  * Display a custom toast message in the upper-right-hand corner of the screen
@@ -422,8 +463,7 @@ function getDataFromArray_(array) {
           normalizedHeader: Header with normalized values
           header: header with unchanged values
 */
-var getData=function(r){function n(r,n){var t=function(r){for(var n=[],t=0;t<r.length;++t)n.push(a(r[t]));return n}(n);return{object:e(r,t),valuesArray:r,normalizedHeader:t,header:n}}function t(r){return r.length<2}function e(r,n){for(var t=[],e=0;e<r.length;++e){for(var a={},o=!1,f=0;f<r[e].length;++f){var i=r[e][f];u(i)?a[n[f]]="":(a[n[f]]=i,o=!0)}o&&t.push(a)}return t}function a(r){for(var n,t="",e=!1,a=0;a<r.length;++a){var u=r[a];" "==u&&t.length>0?e=!0:((n=u)>="A"&&n<="Z"||n>="a"&&n<="z"||o(n))&&(0==t.length&&o(u)||(e?(e=!1,t+=u.toUpperCase()):t+=u.toLowerCase()))}return t}function u(r){return"string"==typeof r&&""==r}function o(r){return r>="0"&&r<="9"}return r.fromSheet=function(r,e){var a=r.getDataRange().getValues();if(t(a))return{};var u=e||1;return n(a.slice(u),a[u-1])},r.fromArray=function(r,e){if(t(r))return{};var a=e||1;return n(r.slice(a),r[a-1])},r}(getData||{});
-
+var getData=function(r){function n(r){for(var n,t="",a=!1,o=0;o<r.length;++o){var u=r[o];" "==u&&t.length>0?a=!0:((n=u)>="A"&&n<="Z"||n>="a"&&n<="z"||e(n))&&(0==t.length&&e(u)||(a?(a=!1,t+=u.toUpperCase()):t+=u.toLowerCase()))}return t}function t(r){return"string"==typeof r&&""==r}function e(r){return r>="0"&&r<="9"}return r.fromArray=function(r,e){var a=e||1;return function(r,e){const a=function(r){for(var t=[],e=0;e<r.length;++e)t.push(n(r[e]));return t}(e);let o;r.length>=2&&(o=function(r,n){for(var e=[],a=0;a<r.length;++a){for(var o={},u=!1,f=0;f<r[a].length;++f){var i=r[a][f];t(i)?o[n[f]]="":(o[n[f]]=i,u=!0)}u&&e.push(o)}return e}(r,a));return{object:o||[],valuesArray:r,normalizedHeader:a,plainHeader:e}}(r.slice(a),r[a-1])},r}(getData||{});
 
 
 

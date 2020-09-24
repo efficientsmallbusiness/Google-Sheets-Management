@@ -188,28 +188,19 @@ User_.prototype.loginValidation = function (accessObject) {
   var clientRecord;
   var userRecord;
   
-  Logger.log('function: logValidation');
-  
   // Client record exists and is active
   if ( clientRecord = conn_().getClientInfo(accessObject,this.userEmail), this.userEmail ) { // Connect to Company Spreadsheet and search for companyId and name
-    Logger.log('client exists')
-    Logger.log(clientRecord);
     // User record exists in client's database
     if ( clientRecord && (userRecord = conn_(clientRecord.sheets.production).getUserRecordFromClientDb(this.userEmail) )) { // Active user's info from client's database  
-      Logger.log('User record exists');
       // User is active
       if (userRecord.status == 'ACTIVE') {
-        Logger.log('user is active');
         // User's app-data object exists
         if ( user = this.getDetails() ) { 
-          Logger.log('already have user app object')
           // Update the user's app data object
           user.userDetails = userRecord;
           this.setDetails(user);
           
         } else { // If the user's app data doesn't exist
-          Logger.log('creating a userAppDataObject');
-          Logger.log(userRecord);
           user = this.createUserAccessObject(accessObject,userRecord);
         }
       }
@@ -228,21 +219,14 @@ User_.prototype.isValid = function () {
   var clientRecord;
   var userRecord;
   
-  Logger.log('function: isValid');
-  
   // Get user details if the user exists and is logged in
   if ( user && (this.getLoggedInStatus()) ) { 
-    Logger.log(user)
-    Logger.log('user app object exists and user is logged in')
     // Client record exists and is active
     if ( clientRecord = conn_().getClientInfo(user.company, this.userEmail) ) { // Connect to Company Spreadsheet and search for companyId and name
-      Logger.log('is an active client');
       // User record exists in client's database
       if ( userRecord = conn_(clientRecord.sheets.production).getUserRecordFromClientDb(this.userEmail) ) { // Active user's info from client's database  
-        Logger.log('found user record');
         // Update the user's app data object
         user.userDetails = userRecord;
-        Logger.log(user.userDetails.status == 'ACTIVE');
         this.setDetails(user);
         
         user = user.userDetails.status == 'ACTIVE' ? user : null;
