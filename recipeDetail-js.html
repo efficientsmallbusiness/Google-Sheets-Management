@@ -14,11 +14,13 @@ $(function(){
    createEventHandlers();
 });
 
+
+
 var createEventHandlers = function () {
   // New Batch button event
  $('#createNewRecipeBtn').click(function(){
    $('#recipeHeader3').html('RECIPE');
-   createNewPageRecord({sheetName:'recipe',headerId:'recipeHeader3'},'recipe');
+   createRecipeInput(createNewRecipe);
  });
  
  $('#backToRecipesBtn').click(function(){
@@ -30,3 +32,12 @@ var createEventHandlers = function () {
  // Handles saving input values
   createOnChangeTrigger();
 };
+
+
+
+//var createNewRecipe = function (inputValues) {
+//// Update header
+//    $('#batchHeader3').html('RECIPE');
+//  createNewPageRecord({sheetName:'recipe',headerId:'recipeHeader3',inputValues:inputValues},'recipe');
+//  
+//};

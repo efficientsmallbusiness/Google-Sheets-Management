@@ -8,7 +8,8 @@ $(function() {
     memory_.loadedRecordSheetTableName = 'batch';
     var id = memory_.loadedRecordId;
     if (id) {
-   //   getPageData_('batch',id);
+    // uncomment
+      getPageData_('batch',id);
       $('#batchHeader3').append(' #'+id);
     }
       
@@ -24,10 +25,7 @@ $(function() {
   var createEventHandlers = function () {
   
     // New Batch button event
-    $('#createNewBatchBtn').click(function(){
-      $('#batchHeader3').html('BATCH');
-      createNewPageRecord({sheetName:'batch',headerId:'batchHeader3'},'batch');
-    });
+    $('#createNewBatchBtn').click(createNewBatch);
     
     // Back to batches list
     $('#backToBatchesBtn').click(function(){
@@ -43,6 +41,7 @@ $(function() {
        }
     })
     
+    // Go to the recipe's details
     $('#recipeId').click(function(){
       const recipeId = $(this).html();
       if (recipeId.indexOf('Recipe') > -1) return;
@@ -51,118 +50,24 @@ $(function() {
     
     // Save the ferment modal values
     $('#saveFermentDetails').click(function(){
-      
       var output = {};
+      // Loop over each modal element
       $('[data-ferment-modal-id]').each(function () {
             var modalElem = $(this);
             var elemId = modalElem.attr('data-ferment-modal-id');
-            
             output[elemId] = modalElem.val();
-            
-        });
-        
+       });
       // Update UI table
       const fermentTableDetails = memory_.fermentTableHelper;
       $('#'+fermentTableDetails.id).bootstrapTable('updateRow', {
         index: fermentTableDetails.index,
         row: output
-      })
-      
+      });
       output.sheetName = 'ferment_details'; // The sheet to save to
-      
       // Update database table
       updateDatabase_(output,'update');
     });
     
-    
-    $('#test').click(function(){
-    
-    
-//    const steps = ['1', '2', '3']
-//const swalQueueStep = Swal.mixin({
-//  confirmButtonText: 'Forward',
-//  cancelButtonText: 'Back',
-//  progressSteps: steps,
-//  input: 'text',
-//  inputAttributes: {
-//    required: true
-//  },
-//  reverseButtons: true,
-//  validationMessage: 'This field is required'
-//})
-//
-//async function backAndForth () {
-//  const values = []
-//  let currentStep
-//
-//  for (currentStep = 0; currentStep < steps.length;) {
-//    const result = await swalQueueStep.fire({
-//      title: 'Question ' + steps[currentStep],
-//      inputValue: values[currentStep],
-//      showCancelButton: currentStep > 0,
-//      currentProgressStep: currentStep
-//    })
-//
-//    if (result.value) {
-//      values[currentStep] = result.value
-//      currentStep++
-//    } else if (result.dismiss === 'cancel') {
-//      currentStep--
-//    } else {
-//      break
-//    }
-//  }
-//
-//  if (currentStep === steps.length) {
-//    Swal.fire(JSON.stringify(values))
-//  }
-//}
-//
-//backAndForth()
-//return;
-    
-// Select if you want to load a recipe or create a new one
-// If load a recipe
-// - show a select option with all the recipe ids with the description
-// - get the recipe data from the database then load the data
-// If new recipe
-// - Get the type (mead, cider, etc)
-// - Brief description (basic ingredients)
-// - Create new row in database and input the new recipe id
-// - default recipe status is "concept"
-      Swal.fire({
-        title: 'Recipe',
-        input: 'radio',
-        inputOptions: {
-            'load': 'Load',
-            'new': 'Create New'
-          },
-        inputValidator: (value) => {
-          if (!value) {
-            return 'Make a selection'
-          }
-        }
-      }).then((result) => {
-      console.log(JSON.stringify(result));
-      
-        if (result.value == 'load') {
-          // Show drop down list with recipes
-        } else if (result.value == 'new') {
-          // Ask questions to create new recipe
-        } else if (result.isDismissed) {
-          // Let user know they need to make a selection or do something else
-        }
-      //  
-      //    Swal.fire(
-      //      'Deleted!',
-      //      'Your file has been deleted.',
-      //      'success'
-      //    )
-      //  }
-      })
-
-     // loadABatch();
-    });
     
     
     // Handles saving tables values
@@ -175,42 +80,3 @@ $(function() {
   /*-------------------------------------------------------------------------------------*/
   /***********************************    FUNCTIONS    ***********************************/
   /*-------------------------------------------------------------------------------------*/
-
-var loadABatch = function() {
-      Swal.mixin({
-        input: 'text',
-        confirmButtonText: 'Next &rarr;',
-        showCancelButton: true,
-        progressSteps: ['1', '2', '3']
-      }).queue([
-        {
-          title: 'Question 1',
-          text: 'Chaining swal2 modals is easy',
-          input: 'select',
-          inputOptions: {
-            'Fruits': {
-              apples: 'Apples',
-              bananas: 'Bananas',
-              grapes: 'Grapes',
-              oranges: 'Oranges'
-            }},
-          inputPlaceholder: 'Select a fruit',
-        },
-        'Question 2',
-        'Question 3'
-      ]).then((result) => {
-        if (result.value) {
-          const answers = JSON.stringify(result.value);
-          //do something
-          Swal.fire({
-            title: 'All done!',
-            html: `
-              Your answers:
-              <pre><code>${answers}</code></pre>
-            `,
-            confirmButtonText: 'Lovely!'
-          });
-          
-        }
-      })
-    };

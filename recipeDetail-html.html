@@ -99,12 +99,24 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-group col-3 col-md-2 float-right">
+                <div class="form-group col-4 col-md-3 float-right">
                     <label for="gPerMl">g CO2/100ml</label>
                     <input class="form-control" data-saveTo="recipe" type="text" name="gPerMl" id="gPerMl" required=""  >
                 </div>
-            
+                
+                <div class="col-5 col-md-3">
+                    <div class="form-group">
+                        <label for="batchType">Batch type</label>
+                        <select id="batchType" class="form-control selectpicker" data-saveTo="recipe" title="Please select..." name="batchType">
+                          <option data-vessel-id="4">TRANS</option>
+                          <option data-vessel-id="5">FERM</option>
+                        </select>
+                    </div>
+                </div>
+                
             </div><!-- END NESTED ROW -->
+            
+            
             <div class="row"><!-- START NESTED ROW -->
             
                 <div class="col-4 col-md-4">
@@ -117,11 +129,11 @@
                     </div>
                     <div class="col-10 form-group">
                         <label for="startGravity">Start</label>
-                        <input class="form-control" data-saveTo="recipe" type="number" min="0" step="0.001" name="startGravity" id="startGravity" value="1.12" required=""  >
+                        <input class="form-control" data-saveTo="recipe" type="number" min="0" step="0.001" name="startGravity" id="startGravity" required=""  >
                     </div>
                     <div class="col-10 form-group">
                         <label for="endGravity">End</label>
-                        <input class="form-control" data-saveTo="recipe" type="number" min="0" step="0.001" name="endGravity" id="endGravity" value="1.012" required=""  >
+                        <input class="form-control" data-saveTo="recipe" type="number" min="0" step="0.001" name="endGravity" id="endGravity" required=""  >
                     </div>
                     
                 </div>
@@ -135,11 +147,11 @@
                     </div>
                     <div class="col-10 form-group">
                         <label for="startBrix">Start</label>
-                        <input class="form-control" data-saveTo="recipe" type="number" min="0" step="0.001" name="startBrix" id="startBrix" value="28.08" required=""  >
+                        <input class="form-control" data-saveTo="recipe" type="number" min="0" step="0.001" name="startBrix" id="startBrix" required=""  >
                     </div>
                     <div class="col-10 form-group">
                         <label for="endBrix">End</label>
-                        <input class="form-control" data-saveTo="recipe" type="number" min="0" step="0.001" name="endBrix" id="endBrix" value="5.08" required=""  >
+                        <input class="form-control" data-saveTo="recipe" type="number" min="0" step="0.001" name="endBrix" id="endBrix" required=""  >
                     </div>
                     
                 </div>
@@ -153,7 +165,7 @@
                     </div>
                     <div class="col-10 form-group">
                         <label for="abvBase">Base</label>
-                        <input class="form-control" data-saveTo="recipe" type="number" min="0" step="0.001" name="abvBase" id="abvBase" value="13.50" required=""  >
+                        <input class="form-control" data-saveTo="recipe" type="number" min="0" step="0.001" name="abvBase" id="abvBase" required=""  >
                     </div>
                     <div class="col-10 form-group">
                         <label for="abvFinal">Final</label>
@@ -243,13 +255,13 @@
                   <div class="col-12">
                       <div class="form-group">
                         <label for="notableDetails">Notable details</label>
-                        <textarea class="form-control" data-saveTo="recipe"  id="notableDetails">It was aged for 900 years!</textarea>
+                        <textarea class="form-control" data-saveTo="recipe"  id="notableDetails"></textarea>
                       </div>
                   </div>
                   <div class="col-12">
                       <div class="form-group">
                         <label for="awards">Awards</label>
-                        <textarea class="form-control" data-saveTo="recipe"  id="awards">1 Gold Star!</textarea>
+                        <textarea class="form-control" data-saveTo="recipe"  id="awards"></textarea>
                       </div>
                   </div>
                   <div class="col-6 col-md-6">

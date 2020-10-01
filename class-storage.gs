@@ -183,7 +183,7 @@ Storage_.prototype.set = function(key, value, minutesToCache) {
       }
       break;
     case 'user':
-      if (this.getUserService_()) {
+      if (this.getUserService_()) { 
         this.getUserService_().setProperty(prefixedKey, jsonValue);
       }
       break;

@@ -161,7 +161,6 @@ function test_createNewSheetRecord (){
   var respon = createNewSheetRecord({accessCode:'1234567'},
                                {btnId:'recipe-btn-blend',loadedRecordId:'123B'},
                                'row');
-  Logger.log(respon);
 }
 
 
@@ -207,16 +206,51 @@ var createNewSheetRecord = function (accessObject,rowDetails,idType) {
 };
 
 
+/**
+* Creates a new row in the recipe and batch spreadsheets and sets the initial values
+* @param {string} idType The type of id to use (must match the client's app object: row, batch, recipe)
+* @param {object} rowDetails Object containing all of the details required to populate a sheet row
+* @param {object} accessObject
+* @return {object} The initial row values to display
+ - The initial values will be used to populate the new table row on the UI
+*/
+var createNewRecipeAndBatchRecords = function (accessObject,initRecipeValues) {
+  const clientInfo = conn_().getStoredInfo(accessObject);
+  const recipeDetails = {inputValues:initRecipeValues};
+  const batchDetails = {};
+  
+  // Get next available record
+  recipeDetails.id = getNextId(accessObject,'recipe');
+  batchDetails.id = getNextId(accessObject,'batch');
+  batchDetails.inputValues = {recipeId:recipeDetails.id}; // Add recipe id to the batch. 
+  
+  // Create initial values for the new recipe row
+  createNewRowObject_(recipeDetails,clientInfo.settings.timezone)
+  // Create initial values for the new recipe row
+  createNewRowObject_(batchDetails,clientInfo.settings.timezone)
+  
+  const conn = conn_(clientInfo.sheets.production);
+  // Create new record in sheet
+  conn.setTable('recipe').createRecord(recipeDetails.initialRowValues);
+  conn.setTable('batch').createRecord(batchDetails.initialRowValues);
+  
+  // The alcType and shortDescription are necessary for populating the UI batchList table
+  batchDetails.initialRowValues['alcType'] = recipeDetails.initialRowValues.alcType;
+  batchDetails.initialRowValues['shortDescription'] = recipeDetails.initialRowValues.shortDescription;
+  
+  return JSON.stringify({recipe:recipeDetails.initialRowValues,batch:batchDetails.initialRowValues});
+};
+
 
 /**
 * Adds the required values for a new record to the icoming object
 * @param {object} obj The object containing the edited row values
 */
 var createNewRowObject_ = function (obj,timezone) {
-  const btnId = obj.btnId;
+  const btnId = obj.btnId; // The button id determines what table is being used. Not applicable if it is a new batch, recipe, etc...
   obj.initialRowValues = {};
-  
-  if (btnId) {
+ 
+  if (btnId) { // This is for sub tables
     // Check if the object contains an ingredient table
     if (btnId.indexOf('ingredient') > -1 || btnId.indexOf('additive') > -1 ) {
       const type = btnId.substring(btnId.length,btnId.lastIndexOf("-")+1);
@@ -225,6 +259,15 @@ var createNewRowObject_ = function (obj,timezone) {
     const foreignKey = btnId.substring(btnId.indexOf("-"),0) + 'Id'; // The foreign key field (eg "RECIPE ID")
     obj.initialRowValues[foreignKey] = obj.loadedRecordId;
   }
+  
+  // Check for any initial values input by the user
+  // Add any user values to the initialRowValues object
+  if (obj.inputValues) {
+    Object.keys(obj.inputValues).forEach(function(key) {
+      obj.initialRowValues[key] = obj.inputValues[key];
+    });
+  }
+  
   // These are mandatory fields for every table record
   obj.initialRowValues.id = obj.id; // Generated record number
   obj.initialRowValues.created = Utilities.formatDate(new Date(), timezone, "MM/dd/yyyy");

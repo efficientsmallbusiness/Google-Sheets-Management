@@ -1,9 +1,9 @@
 <script>// this tag is removed when the page is loaded
 
 $(function(){
-     $("#indexLoader").hide();
-     loadTables('loading');
-    getRecipeList();
+   $("#indexLoader").hide();
+   loadTables('loading');
+   getRecipeList();
    // Creates dblClick event for table
    createEventHandlers();
     
@@ -14,8 +14,7 @@ var createEventHandlers = function () {
   
     // New Batch button event
     $('#createNewRecipeBtn').click(function(){
-    alert_('new recipe');
-      //createNewPageRecord('recipe');
+       createRecipeInput(createNewRecipe);
     });
     
     // Creates dblClick event for table
@@ -27,7 +26,7 @@ function getRecipeList(){
   // If the user has not refreshed the page
   // The recipe list should still be in the temporary data variable
    if (!memory_.lists.recipeList) {
-     google.script.run.withSuccessHandler(getRecipeList_callback).getTableArray(memory_.user.company,'recipe');
+     getRecipeArray(getRecipeList_callback);
      return;
    };
    loadTables({table:memory_.lists.recipeList}); // the "table" key is the same id of the table where these values go
@@ -38,7 +37,11 @@ function getRecipeList(){
 */
 function getRecipeList_callback(recipeArray){
   var data = getDataFromArray_(JSON.parse(recipeArray).mainArray);
+  console.log(data);
   memory_.lists.recipeList = data;
   loadTables({table:data}); // the "table" key is the same id of the table where these values go
 }
+
+
+
 

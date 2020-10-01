@@ -4,7 +4,11 @@ The user should be prompted to "convert to recipe" (create a new recipe from the
 otherwise notify the user that the recipe will be updated and the cola and labels may need resubmitted
 Have an "update recipe" and "convert to recipe" buttons
 
+
 New Batch (from recipe - select recipe to load)
+- This needs more work
+- The table_RECIPE_DETAILS needs to be pulled when a new batch is created
+- I need to figure out the best way to do this
 New Batch (new recipe - require alc type, short description, status, created, ID)
 
 
@@ -35,6 +39,12 @@ Everytime a user logs in or refreshes the page, their user properties are update
 So if their name is changed in the system, they will need to refresh their browser for changes to take effect.
 
 When adding a new table to a page, you must make sure the table details are added to the "getPageData" function
+
+Load specific record using url parameters
+?p=batchDetail&r=123B // loads batch # 123B
+?p=recipeDetail&r=54R // loads recipe # 54R
+?p=recipeDetail // loads a blank recipe page
+?p=recipeList // loads the recipe lists
 
 ADDING NEW INPUT FIELDS
 - The input element ID must be the normalized version of the associated column title

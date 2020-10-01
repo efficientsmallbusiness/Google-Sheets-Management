@@ -39,7 +39,7 @@ var memory_ = {activePage: null, // The name of the loaded page (ie home, batchL
      });
      
      // Check if ui lists have been loaded. If not, get them from the server. The inventory/ingredient list is in the ui lists, so if it's not here, none of them are
-          uiListExists('ingredient');
+          uiListExists();
       // Load the initial page
       getPage(serverPayload.initPage,serverPayload.recordId);
    }
@@ -131,6 +131,7 @@ var memory_ = {activePage: null, // The name of the loaded page (ie home, batchL
     // if an ID was passed through, put the recordId into temporary memory, so it can be loaded by the individual page's JS
     if (obj.recordId) {
       memory_.loadedRecordId = obj.recordId;
+      delete obj.recordId // delete the record id, so it's not automatically recalled on page reload
       $(".loading").show();
     } else {
       // Remove any previous loaded record Id if a new id wasn't passed
@@ -145,17 +146,34 @@ var memory_ = {activePage: null, // The name of the loaded page (ie home, batchL
    }
    
    /**
-   * Get recipe data from server
-   * @param {array} inputTables The Tables that populate the input fields
+   * Get page data from server
+   * @param {string} sheetName The spreadsheet tab to return
+   * @param {string} recordId The specific record to return
    */
   function getPageData_(sheetName,recordId){
     google.script.run.withSuccessHandler(processPageData).getPageData(memory_.user.company,sheetName,recordId);
   }
+  
+  /**
+  * Get the recipes associated with each batch data from server
+  */
+  function getBatchRecipeArray(callback) {
+    const isQuery = true;
+    google.script.run.withSuccessHandler(callback).getTableArray(memory_.user.company,'BATCH_RECIPE_LIST',isQuery);
+  }
    
+   
+  /**
+  * Get the recipes data from server
+  */
+  function getRecipeArray(callback) {
+    google.script.run.withSuccessHandler(callback).getTableArray(memory_.user.company,'recipe');
+  }
+  
    
   // Check if ui lists have been loaded. If not, get them from the server
-  function uiListExists(listName){
-    if (memory_.lists[listName]) return;
+  function uiListExists(){
+    if (memory_.lists['ingredient']) return;
     google.script.run.withSuccessHandler(separateUiListsAndConvertToHtml).getTableArray(memory_.user.company,"UI_LISTS");
   }
  
@@ -207,6 +225,7 @@ var memory_ = {activePage: null, // The name of the loaded page (ie home, batchL
    function createOnChangeTrigger(){
  
      $('[data-saveTo]').off('change [data-saveTo]').on('change [data-saveTo]', function(e) {
+     console.log('change is happening');
         const columnHeader = this.id; // The element ids should be a normalized version of the spreadsheet column headers
         
         if (this.tagName === 'DIV') return; // There is a second change trigger coming from a DIV. This if statement catches any change triggers coming from a div
@@ -217,7 +236,7 @@ var memory_ = {activePage: null, // The name of the loaded page (ie home, batchL
           return;
         }
         
-        var recordId = this.dataset.recordId;
+        var recordId = $(this).attr('data-recordid');
         const output = {
           sheetName: this.dataset.saveto,
           id: recordId, // The spreadsheet row to update
@@ -328,42 +347,15 @@ function refreshSelectElements(){
     memory_.loadedRecordId = newId;
  }
 
- /**
- * Clears the page, creates a new id, and adds a timestamp
- * @param {object} initObj The sheetName and header id
- * @param {string} type The type of id to input - batch or recipe
- */
- function createNewPageRecord(initObj,type){
- // clear all elements
-  clearInputElementsAndTables();
-  // Get new recipe id from server
-  createNewSheetRecord_(newPageCallback,initObj,type);
-   // Load tables with no data
-  
-  // If this is a new batch, it needs a recipe associated with it
-  if (type == 'batch') {
-  
-  }
-   // Display success message
-   toast_('Yay! A new '+type, 'success');
- }
-
-  function newPageCallback(response){
-    const data = JSON.parse(response);
-    updateRecipeId(data.id);
-    var obj = {};
-    obj[data.sheetName] = data.initialRowValues; // The obj key must match the "data-saveTo" value, so the values are entered into the correct fields
-    loadFormFields(obj);
-    $('#' + data.headerId).html(data.sheetName.toUpperCase()+' #' + data.id);
-  }
 
  // Alert user that a save attempt failed when updating a table
  function rowSavingError(e){
- console.log(e);
+   console.log(e);
    customAlert_('error','Error connecting to database. Refresh the page and try again.');
  }
-   
  
+ 
+    
  
  /**
  * Display a custom toast message in the upper-right-hand corner of the screen

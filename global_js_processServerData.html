@@ -18,7 +18,10 @@
 * @param serverObject {object} JSON object containing table data 
 */
 var processPageData =function(serverResponse){
-  var serverObject = JSON.parse(serverResponse);
+  var serverObject;
+  // If the serverResponse is a string, then parse it, otherwise don't do anything
+  if ('string' == typeof serverResponse) serverObject = JSON.parse(serverResponse);
+  else serverObject = serverResponse;
   
   // Load form fields
   loadFormFields(serverObject);
@@ -46,16 +49,20 @@ var loadFormFields = function (object){
     var sheetValue;
     // If the "object" key matches the "saveTo" sheet name, continue
     if (sheetData = object[this.dataset.saveto]) {
+      let el = $(this);
+      
+      // Add the record id to the individual element
+      el.attr('data-recordid',sheetData.id);
+      
       sheetValue = sheetData[this.id];
       
-      // If the current element's id matches a key in the sheetData, enter the value
+      // sheetValue will be undefined if the element id does not match a key in the sheetData object
       if (sheetValue !== undefined) {
-        
-        // Add the record id to the individual element
-        this.dataset.recordId = sheetData.id;
-        
-        let el = $(this);
         let elemType = el.attr('type');
+        
+        
+        
+        
         
         // Check the element type and format accordingly
          if (elemType === 'date') {
@@ -70,7 +77,6 @@ var loadFormFields = function (object){
          } else {
            el.val(sheetValue);
          }
-         
         
       }
     }
@@ -119,9 +125,12 @@ function loadTables(tablesObject){
 
 
 
-
+/**
+* Destroy previous bootstrap table and load data into the new one
+*/
 var loadTable = function(el,object) {
-  el.bootstrapTable('destroy').bootstrapTable({data: object});
+  // Tables are destroyed before they're created to prevent issues
+  el.bootstrapTable('destroy').bootstrapTable({data: object}); 
 }
 
 
@@ -203,14 +212,5 @@ function separateUiListsAndConvertToHtml(arr){
 }
 
 
-
-//function getLossTypeList(data){
-//  var header = data[0];
-//  var lossTypeIndex = header.indexOf('LOSS TYPE');
-//  
-//  return data
-//  .map(function(val,index){if (val) {if (index > 0) {return val[lossTypeIndex];}}})
-//  .filter(function(e) {return e}); // Remove blanks
-//}
 
 </script>

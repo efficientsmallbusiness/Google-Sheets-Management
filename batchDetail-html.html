@@ -51,8 +51,8 @@
                 <div class="col-4 col-md-2">
                     <div class="form-group">
                         <label for="batchType">Batch type</label>
-                        <select id="batchType" class="form-control selectpicker" data-saveTo="batch" title="Please select..." name="batchType">
-                          <option data-vessel-id="4">BATCH</option>
+                        <select id="batchType" class="form-control selectpicker" data-saveTo="recipe" title="Please select..." name="batchType">
+                          <option data-vessel-id="4">TRANS</option>
                           <option data-vessel-id="5">FERM</option>
                         </select>
                     </div>
@@ -72,10 +72,11 @@
                     <div class="form-group">
                         <label for="batchStatus">Status</label>
                         <select id="batchStatus" title="Please select..." class="form-control selectpicker" data-saveTo="batch" name="batchStatus">
-                          <option>Scheduled</option>
-                          <option>In-Progress</option>
-                          <option>Aging</option>
-                          <option>Complete</option>
+                          <option>HOLD</option>
+                          <option>SCHEDULED</option>
+                          <option>IN-PROGRESS</option>
+                          <option>AGING</option>
+                          <option>COMPLETE</option>
                         </select>
                     </div>
                 </div>
@@ -439,7 +440,7 @@
                 <div class="col-6">
                     <div class="form-group">
                       <label for="notableDetails">Notable details</label>
-                      <textarea class="form-control" data-saveTo="recipe"  id="notableDetails">It was aged for 900 years!</textarea>
+                      <textarea class="form-control" data-saveTo="recipe"  id="notableDetails"></textarea>
                     </div>
                 </div>
                 
@@ -843,5 +844,4 @@
     </div>
 </div>
 
-<button id="test">TEST</button>
 
