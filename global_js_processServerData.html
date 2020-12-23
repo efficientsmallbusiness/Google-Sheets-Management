@@ -154,6 +154,7 @@ var loadTable = function(el,object) {
   * Used when adding dates to table rows
   */
   var formatDateAddDay = function (value) {
+  console.log(value);
     var dt = new Date(value);
     // Put a 0 before single-digit dates
     var day = ("0" + (dt.getDate()+1)).slice(-2);

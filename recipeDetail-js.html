@@ -7,7 +7,10 @@ $(function(){
   memory_.loadedRecordSheetTableName = 'recipe';
   var id = memory_.loadedRecordId;
     if (id) {
-      getPageData_(memory_.loadedRecordSheetTableName,id);
+      var options = {};
+      options.sheetName = memory_.loadedRecordSheetTableName;
+      options.recordId = id;
+      getPageData_(options);
       $('#recipeHeader3').append(' #'+id);
     }
    
@@ -32,12 +35,3 @@ var createEventHandlers = function () {
  // Handles saving input values
   createOnChangeTrigger();
 };
-
-
-
-//var createNewRecipe = function (inputValues) {
-//// Update header
-//    $('#batchHeader3').html('RECIPE');
-//  createNewPageRecord({sheetName:'recipe',headerId:'recipeHeader3',inputValues:inputValues},'recipe');
-//  
-//};

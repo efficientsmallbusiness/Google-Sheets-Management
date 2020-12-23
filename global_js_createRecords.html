@@ -2,42 +2,80 @@
 
   function createNewBatch(){
   
-      // Select if you want to load a recipe or create a new one
-      // If load a recipe
-      // - show a select option with all the recipe ids with the description
-      // - get the recipe data from the database then load the data
-      // If new recipe
-      // - Get the type (mead, cider, etc)
-      // - Brief description (basic ingredients)
-      // - Create new row in database and input the new recipe id
-      // - default recipe status is "concept"
-      Swal.fire({
-        title: 'Recipe',
-        input: 'radio',
-        inputOptions: {
-            'load': 'Load',
-            'new': 'Create New'
-          },
-        inputValidator: (value) => {
-          if (!value) {
-            return 'Make a selection'
-          }
-        }
-      }).then((result) => {
+      Swal.mixin({
+            input: 'text',
+            confirmButtonText: 'Next &rarr;',
+            showCancelButton: true,
+            progressSteps: ['1', '2']
+          }).queue([{
+            title: 'Recipe',
+            input: 'radio',
+            inputOptions: {
+                'load': 'Load',
+                'new': 'Create New'
+              },
+              inputValidator: (value) => {
+                if (!value) {
+                  return 'Make a selection'
+                }
+              }
+              },
+              {
+              title: 'Initial batch size (gals)',
+              input: 'number',
+              inputValue: 'Initial batch size',
+               inputValidator: (value) => {
+                if (!value) {
+                  return 'Make a selection'
+                }
+              }
+            },
+       ]).then((result) => {
+         
+         memory_.initGallons = result.value[1];
+         
+         if (result.value[0] == 'load') {
+           // Creates a batch from existing recipes
+           showRecipeOptions(); // Show drop down list with recipes
+         } else if (result.value[0] == 'new') {
+           // Creates a batch from a new recipe
+           createRecipeInput(initiateNewRecipeAndBatchProcess);// Ask questions to create new recipe
+         } else if (result.isDismissed) {
+           // Let user know they need to make a selection or do something else
+           memory_.initGallons = null;
+         }
+         
+       })
       
-        if (result.value == 'load') {
-          // Creates a batch from existing recipes
-          showRecipeOptions(); // Show drop down list with recipes
-        } else if (result.value == 'new') {
-          // Creates a batch from a new recipe
-          createRecipeInput(initiateNewRecipeAndBatchProcess);// Ask questions to create new recipe
-        } else if (result.isDismissed) {
-          // Let user know they need to make a selection or do something else
-        }
   
-      })
-
-     
+  
+  
+//      // Select if you want to load a recipe or create a new one
+//      Swal.fire({
+//        title: 'Recipe',
+//        input: 'radio',
+//        inputOptions: {
+//            'load': 'Load',
+//            'new': 'Create New'
+//          },
+//        inputValidator: (value) => {
+//          if (!value) {
+//            return 'Make a selection'
+//          }
+//        }
+//      }).then((result) => {
+//      
+//        if (result.value == 'load') {
+//          // Creates a batch from existing recipes
+//          showRecipeOptions(); // Show drop down list with recipes
+//        } else if (result.value == 'new') {
+//          // Creates a batch from a new recipe
+//          createRecipeInput(initiateNewRecipeAndBatchProcess);// Ask questions to create new recipe
+//        } else if (result.isDismissed) {
+//          // Let user know they need to make a selection or do something else
+//        }
+//  
+//      });
     }
 
   
@@ -77,11 +115,11 @@
         // Archived meads are not included
         recipeArray.forEach(function(v){
           if (v.recipeStatus.toUpperCase() == 'ACTIVE') {
-            recipeListOutput.active[v.id] = v.id + ' ' + v.shortDescription;
+            recipeListOutput.ACTIVE[v.id] = v.id + ' ' + v.shortDescription;
           } else if (v.recipeStatus.toUpperCase() == 'DEVELOPING') {
-            recipeListOutput.developing[v.id] = v.id + ' ' + v.shortDescription;
+            recipeListOutput.DEVELOPING[v.id] = v.id + ' ' + v.shortDescription;
           } else if (v.recipeStatus.toUpperCase() == 'CONCEPT') {
-            recipeListOutput.concept[v.id] = v.id + ' ' + v.shortDescription;
+            recipeListOutput.CONCEPT[v.id] = v.id + ' ' + v.shortDescription;
           }
         });
         
@@ -96,6 +134,7 @@
     */
     var showRecipeOptions = function() {
       if (!memory_.lists.recipeList) {
+        // If the recipe list isn't in the temp memory_ then get it from the server
         getRecipeArray(showRecipeOptions_callback);
         return;
       };
@@ -139,40 +178,57 @@
       
       // If a recipe was selected
       if (selectedRecipeId) {
-       //   createNewBatchRecord({recipeId:selectedRecipeId})// Create new record in the batch spreadsheet
-       //   loadRecipeDataFromTempMemory(selectedRecipeId); // Load recipe values from server
+        // This alerts the script to load the initial batch records from the recipeDetails instead of the batchDetails sheet
+        // This is checked when the batchDetails file is loaded. This key/value pair will be deleted from the temp memory after use
+        memory_['getRecipesDetails'] = selectedRecipeId;
         
-       Swal.fire(`You selected recipe: ${selectedRecipeId}. This still needs work`)
+       // Create new batch record, add the recipe id, and the batchStatus of "ON HOLD" to the new Batch record then reload the page
+        createNewBatchFromCurrentRecipe({recipeId: selectedRecipeId, batchStatus: 'ON HOLD'})// Create new record in the batch spreadsheet
       }
      
     };
     
     
-    /**
-    * Loads the recipe data stored in the local memory_ object to any elements with an id that matches the object keys1
-    * @param {string} recipeId The id to search for and load
-    */
-    var loadRecipeDataFromTempMemory = function (recipeId) {
-      if (!memory_.lists.recipeList) return;
-      
-      const obj = {};
-      // The recipe details must have the key "recipe" 
-      // so the loadFormFields() function can put the values in the correct fields by matching the "data-saveTo"
-      obj.recipe = {}; 
-      
-      // Find the element with matching recipe id
-      memory_.lists.recipeList.forEach(function(o){
-        if (o.id == recipeId) {
-          obj.recipe = o;
-        }
-      });
-      
-      // Fill elements
-      processPageData(obj);
-    };
+ /**
+ * Gets the next available batch id, and creates a new batch record in the batch spreadsheet
+ * @param {string} recipeId The recipe id associated with this batch (new recipe id is determined by the newBatch() function)
+ */
+ function createNewBatchFromCurrentRecipe(inputValues){
+  inputValues.initialGallons = memory_.initGallons;
+  // Get new recipe id from server
+   createNewSheetRecord_(createNewBatchFromCurrentRecipe_callback,{sheetName:'batch',headerId:'batchHeader3',inputValues:inputValues,getValuesFromRecipe:true},'batch');
+ }
 
 
-
+ /**
+ * The callback function for createNewBatchRecord()
+ * @param {object} response The server response
+ */
+ function createNewBatchFromCurrentRecipe_callback(response){
+    const data = JSON.parse(response);
+    
+    console.log('data');
+    console.log(data);
+    
+    var obj = {};
+    obj[data.sheetName] = data.initialRowValues; // The obj key must match the "data-saveTo" value, so the values are entered into the correct fields
+    
+    // Update batch lists (if available)
+    if (memory_.lists.batchList) memory_.lists.batchList.push(data.initialRowValues);
+     
+     // Create a new key value pair in the temp memory_ object that will be used to determine where subTable values are retrieved
+     //memory_['getBatchValuesFromRecipe'] = true;
+     
+    // Reload the page using the new id
+    getPage( pageToLoad(data.id) ,data.id);
+     
+    // Display success message
+    toast_('Yay! A new batch', 'success');
+  }
+  
+  
+  
+  
 
   /******** CREATE A NEW RECIPE AND BATCH AT THE SAME TIME  ********/
   // ONLY DONE FROM THE batchDetails PAGE
@@ -215,65 +271,36 @@
  * @param {string} type The type of id to input - batch or recipe
  */
 var createNewRecipe = function (inputValues) {
-   createNewSheetRecord_(createNewRecipe_callback,{sheetName:'recipe',headerId:'recipeHeader3',inputValues:inputValues},'recipe');
-  
-  // Display success message
-  toast_('Yay! A new recipe', 'success');
+   createNewSheetRecord_(createNewRecipe_callback,{sheetName:'recipe',headerId:'recipeHeader3',inputValues:inputValues},'recipe');  
 };
 
 
+
+/**
+* Callback function for createNewRecipe()
+* updates the recipe list then loads the details page
+*/
 var createNewRecipe_callback = function(response) {
   const data = JSON.parse(response);
-  
   // Update recipe and batch lists (if available)
   if (memory_.lists.recipeList) memory_.lists.recipeList.push(data.initialRowValues);
   
   // Reload the page using the new id
   getPage( pageToLoad(data.id) ,data.id);
+  
+  // Display success message
+  toast_('Yay! A new recipe', 'success');
 }
  
  
  
  
 
- /**
- * Clears the page, creates a new id, and adds a timestamp
- * @param {object} initObj The sheetName and header id
- * @param {string} type The type of id to input - batch or recipe
- */
- function createNewPageRecord(initObj,type){
- // clear all elements
-  clearInputElementsAndTables();
-  // Get new recipe id from server
-   createNewSheetRecord_(newPage_callback,initObj,type);
-  
-  // Display success message
-  toast_('Yay! A new '+type, 'success');
-   
-   return true;
- }
-
-
-
- function newPage_callback(response){
-    const data = JSON.parse(response);
-    updateRecipeId(data.id);
-    var obj = {};
-    obj[data.sheetName] = data.initialRowValues; // The obj key must match the "data-saveTo" value, so the values are entered into the correct fields
-    
-    console.log('creating new thing');
-    console.log(data);
-    
-    
-    loadFormFields(obj);
-    $('#' + data.headerId).html(data.sheetName.toUpperCase()+' #' + data.id);
-  }
-
-
-
-
  
-   
+/**
+* The required user input for creating a new recipe
+* @param {function} onSuccessHandler The function to run after user input is received
+*/
  var createRecipeInput = function(onSuccessHandler) {
       Swal.mixin({
         input: 'text',
@@ -344,7 +371,8 @@ var createNewRecipe_callback = function(response) {
            alcType:result.value[0],
            batchType:result.value[1],
            recipeStatus:result.value[2],
-           shortDescription:result.value[3]
+           shortDescription:result.value[3],
+           initialGallons: memory_.initGallons,
        };
            
        onSuccessHandler(initialRecipeValues)

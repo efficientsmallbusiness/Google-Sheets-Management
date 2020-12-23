@@ -74,7 +74,7 @@ const dbConn_ = function(spreadsheetId) {
 * @param {object} newValues The key/value pairs to be appended to the sheet. The keys must match the column headers
 */
 dbConn_.prototype.createRecord = function (newValues){
-  log_('createRecord');
+ // log_('createRecord');
   const tableValues = this.getValues();
   const output = removeNull_(formatTableArray_(tableValues.normalizedHeader,newValues));
   this.getSheet_().appendRow(output);
@@ -86,8 +86,8 @@ dbConn_.prototype.createRecord = function (newValues){
 * @return {!dbConn_} This service, for chaining.
 */
 dbConn_.prototype.updateRecord = function (newValues){
-log_('updateRecord');
-log_(newValues);
+//log_('updateRecord');
+//log_(newValues);
   // If there is no id key, throw an error
   if (! newValues.id ) throwError_('Missing record id');
   

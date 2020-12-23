@@ -27,13 +27,13 @@ function setLoggedInStatus(status,companyName){
   - {loggedIn: false,message: 'Could not verify login credentials'}
 */
 function userLogin(accessObject) {
+  const defaultPage = 'batchList' // The page to load after signing in
   var loggedIn = false;
   var userData;
   if ( userData = getUser_().logIn(accessObject) ) {
    loggedIn = true; 
   }
-  var status = 'Log in = '+loggedIn;
-  return {loggedIn: loggedIn,message:status,userData:userData,page:'home'};
+  return {loggedIn: loggedIn,userData:userData,page:defaultPage};
 }
 
 

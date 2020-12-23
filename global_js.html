@@ -39,7 +39,7 @@ var memory_ = {activePage: null, // The name of the loaded page (ie home, batchL
      });
      
      // Check if ui lists have been loaded. If not, get them from the server. The inventory/ingredient list is in the ui lists, so if it's not here, none of them are
-          uiListExists();
+     uiListExists();
       // Load the initial page
       getPage(serverPayload.initPage,serverPayload.recordId);
    }
@@ -104,6 +104,8 @@ var memory_ = {activePage: null, // The name of the loaded page (ie home, batchL
   ** Loading the JS this way prohibits the use of "<"
   */
   function showPage(obj){
+  console.log('showPage');
+  console.log(obj);
     var fileData = obj.fileData;
     var fileName = obj.fileName;
    
@@ -131,7 +133,7 @@ var memory_ = {activePage: null, // The name of the loaded page (ie home, batchL
     // if an ID was passed through, put the recordId into temporary memory, so it can be loaded by the individual page's JS
     if (obj.recordId) {
       memory_.loadedRecordId = obj.recordId;
-      delete obj.recordId // delete the record id, so it's not automatically recalled on page reload
+      delete obj.recordId // delete the record id, so it's not automatically recalled when the page is reloaded
       $(".loading").show();
     } else {
       // Remove any previous loaded record Id if a new id wasn't passed
@@ -147,11 +149,10 @@ var memory_ = {activePage: null, // The name of the loaded page (ie home, batchL
    
    /**
    * Get page data from server
-   * @param {string} sheetName The spreadsheet tab to return
-   * @param {string} recordId The specific record to return
+   * @param {object} options JSON object containing options
    */
-  function getPageData_(sheetName,recordId){
-    google.script.run.withSuccessHandler(processPageData).getPageData(memory_.user.company,sheetName,recordId);
+  function getPageData_(options){
+    google.script.run.withSuccessHandler(processPageData).getPageData(memory_.user.company,options);
   }
   
   /**
@@ -174,6 +175,7 @@ var memory_ = {activePage: null, // The name of the loaded page (ie home, batchL
   // Check if ui lists have been loaded. If not, get them from the server
   function uiListExists(){
     if (memory_.lists['ingredient']) return;
+    if (!memory_.user) return;
     google.script.run.withSuccessHandler(separateUiListsAndConvertToHtml).getTableArray(memory_.user.company,"UI_LISTS");
   }
  
@@ -225,7 +227,6 @@ var memory_ = {activePage: null, // The name of the loaded page (ie home, batchL
    function createOnChangeTrigger(){
  
      $('[data-saveTo]').off('change [data-saveTo]').on('change [data-saveTo]', function(e) {
-     console.log('change is happening');
         const columnHeader = this.id; // The element ids should be a normalized version of the spreadsheet column headers
         
         if (this.tagName === 'DIV') return; // There is a second change trigger coming from a DIV. This if statement catches any change triggers coming from a div
@@ -341,17 +342,12 @@ function refreshSelectElements(){
 
 
  
- 
- var updateRecipeId = function (newId) {
-   console.log(`new id is ${newId}`);
-    memory_.loadedRecordId = newId;
- }
-
-
- // Alert user that a save attempt failed when updating a table
+ /**
+ * Alert user that a save attempt failed when updating a table
+ */
  function rowSavingError(e){
    console.log(e);
-   customAlert_('error','Error connecting to database. Refresh the page and try again.');
+   customAlert_('error','Error connecting to database. Refresh the page and try again. If issue persists, contact technical support.');
  }
  
  
@@ -359,11 +355,8 @@ function refreshSelectElements(){
  
  /**
  * Display a custom toast message in the upper-right-hand corner of the screen
- *
  * @param iconType {string} The type of icon to show in the message window
  * @param message {string} The message being displayed
- *
- * return nothing
  */
  function toast_(message,iconType){
    

@@ -39,7 +39,7 @@ var render_ = function(page,recordId) {
 * @param {recordId} recordId [optional] The record details to load once the page has been loaded
 * @return {HTML string}
 */
-function include(page,isPageLoad,recordId) {
+function include(page,isPageLoad,recordId,obj) {
   if (!page) return;
   const fileObject = {};
   fileObject.fileName = page;
@@ -66,11 +66,13 @@ function include(page,isPageLoad,recordId) {
     return fileObject;
   }
   
+  // If the file being loaded is "global_javascript", load all of the global js files at once
   if (page == 'global_javascript') {
     return [getScriptFile_('global_js'),
-             getScriptFile_('global_js_processServerData'),
-             getScriptFile_('global_js_tables')].join(''); 
-
+            getScriptFile_('global_js_processServerData'),
+            getScriptFile_('global_js_tables'),
+            getScriptFile_('global_js_createRecords')
+           ].join(''); 
   }
   // If this isn't a page load, return the individual file
   return getScriptFile_(page);
@@ -89,5 +91,5 @@ const doGet = function (e = {}){
   // If user is valid and has passed a page parameter, load that page (option: load page w/ id)
   if (param.p) {return render_(param.p,param.r);}
   // If there isn't a page parameter passed, load the home screen
-  return render_('home');
+  return render_('batchList');
 }

@@ -29,6 +29,7 @@
     <a class="nav-item nav-link active" id="nav-general-tab" data-toggle="tab" href="#nav-general" role="tab" aria-controls="nav-general" aria-selected="true">General</a>
     <a class="nav-item nav-link" id="nav-fermDetails-tab" data-toggle="tab" href="#nav-fermDetails" role="tab" aria-controls="nav-fermDetails" aria-selected="false">Fermentation</a>
     <a class="nav-item nav-link" id="nav-blendDetails-tab" data-toggle="tab" href="#nav-blendDetails" role="tab" aria-controls="nav-blendDetails" aria-selected="false">Transfer</a>
+    <a class="nav-item nav-link" id="nav-packaging-tab" data-toggle="tab" href="#nav-packaging" role="tab" aria-controls="nav-packaging" aria-selected="false">Packaging</a>
     <a class="nav-item nav-link" id="nav-additional-tab" data-toggle="tab" href="#nav-additional" role="tab" aria-controls="nav-additional" aria-selected="false">Additional</a>
     
    
@@ -72,10 +73,11 @@
                     <div class="form-group">
                         <label for="batchStatus">Status</label>
                         <select id="batchStatus" title="Please select..." class="form-control selectpicker" data-saveTo="batch" name="batchStatus">
-                          <option>HOLD</option>
+                          <option>ON HOLD</option>
                           <option>SCHEDULED</option>
-                          <option>IN-PROGRESS</option>
+                          <option>WORKING</option>
                           <option>AGING</option>
+                          <option>PACKAGING</option>
                           <option>COMPLETE</option>
                         </select>
                     </div>
@@ -145,67 +147,6 @@
  
  
  
- 
-  <!-- *********************************** STARTER DETAILS ************************************* -->
-        
-    
-            
-         <div class="col-lg-12">
-             <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input slider" id="showStarterDetails">
-                <label class="custom-control-label" for="showStarterDetails">Batch start</label>
-            </div>
-        </div>
-        
-       
-    <div id="starterDetails">
-        
-        <h3>STARTER DETAILS</h3>
-        <p>How much honey, water, yeast, and goferm? What are the initial nutrient additions? Do I need to add enzymes?</p>
-            
-        <div class="row add-top-margin"> <!-- START ROW -->
-            
-            <div class="col-md-12">
-                <div class="row"><!-- START NESTED ROW -->
-                
-                    <div class="col-4 col-md-2">
-                        <div class="form-group">
-                            <label for="targetStartingGrav">Target starting gravity</label>
-                            <input class="form-control" data-saveTo="recipe" type="text" name="targetStartingGrav" id="targetStartingGrav">
-                        </div>
-                    </div>
-                    <div class="col-4 col-md-2">
-                        <div class="form-group">
-                            <label for="targetFinalGrav">Target final gravity</label>
-                            <input class="form-control" data-saveTo="recipe" type="text" name="targetFinalGrav" id="targetFinalGrav">
-                        </div>
-                    </div>
-                    <div class="col-4 col-md-2">
-                        <div class="form-group">
-                            <label for="targetFinalAbv">Target final abv</label>
-                            <input class="form-control" data-saveTo="recipe" type="text" name="targetFinalAbv" id="targetFinalAbv">
-                        </div>
-                    </div>
-                    
-                </div><!-- END NESTED ROW -->
-                <div class="row"><!-- START NESTED ROW -->
-                
-                  <div class="col-12">
-                      <div class="form-group">
-                        <label for="batchNotes">Start notes</label>
-                        <textarea class="form-control" data-saveTo="batch"  id="batchNotes"></textarea>
-                      </div>
-                  </div>
-                  
-                </div><!-- END NESTED ROW -->
-            </div>   
-     </div>
-     
-    </div>
-     <!-- *********************************** END STARTER DETAILS ************************************* -->
-    
-    
-    
     <div class="row add-top-margin"> <!-- Open table row -->
     
       <div class="col-lg-6"> <!-- INGREDIENT TABLE -->
@@ -227,8 +168,8 @@
                 <tr>
                     <th data-field="ingredient" class="wideCol ingredientSelect" data-sortable="true">Ingredient</th>
                     <th data-field="qty" class="narrowCol numberInput">Qty</th>
-                    <th data-field="uom" class="noEdit narrowCol">UoM</th>
-                    <th data-field="contactTime" class="narrowCol textInput">Time</th>
+                    <th data-field="uom" class="narrowCol">UoM</th>
+                    <th data-field="note" class="narrowCol textInput">Note</th>
                     <!-- Hidden columns -->
                     <!-- These are used for storing row data -->
                     <th data-field="id" data-visible="false" class="noEdit"></th>
@@ -245,46 +186,9 @@
       </div><!-- CLOSE INGREDIENT TABLE -->
       
       <br><br>
+     
       
-      <div class="col-lg-6"><!-- ADDITIVE TABLE -->
-      
-          
-          <div class="tableHeader addBtnDiv" style="background-color:#897c79;">
-            <span style="padding-left:60px;">Additives</span>
-            <button type="button" id="batch-btn-additive" class="float-right btn btn-light newRow" data-saveTableTo="batch_details">ADD</button>
-            <button class="float-right btn btn-light loadingBtn newRow" id="batch-btn-additive-loading" type="button" disabled>
-                <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
-                <span class="sr-only">Loading...</span>
-            </button>
-          </div>
-          
-          <table id="batch-table-additive"
-          data-height="200"
-          data-toggle="table"
-          class="table-borderless table-sm"
-          data-saveTableTo="batch_details">
-            <thead>
-              <tr>
-                <th data-field="ingredient" class="wideCol ingredientSelect" data-sortable="true">Additive</th>
-              <th data-field="qty" class="narrowCol numberInput">Qty</th>
-              <th data-field="uom" class="noEdit narrowCol">UoM</th>
-              <th data-field="contactTime" class="narrowCol textInput">Time</th>
-              <!-- Hidden columns -->
-              <!-- These are used for storing row data -->
-              <th data-field="id" data-visible="false" class="noEdit"></th>
-              <th data-field="batch" data-visible="false" class="noEdit"></th>
-              <th data-field="type" data-visible="false" class="noEdit"></th>
-              <th data-field="created" data-visible="false" class="noEdit"></th>
-              <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" class="noEdit iconCol"></th>
-              </tr>
-            </thead>
-          </table>
-          
-        <div class="hline-bottom"></div>
-      
-      </div><!-- CLOSE ADDITIVE TABLE -->
-      
-      <div class="col-lg-12"><!-- LOSS TABLE -->
+      <div class="col-lg-6"><!-- LOSS TABLE -->
         
           <div class="tableHeader addBtnDiv" style="background-color:#7c7989;">
             <span style="padding-left:60px;">Loss</span>
@@ -465,9 +369,71 @@
    <a href="#!" onClick="alert('Are you sure you want to archive this batch?');">Archive</a>
   </div><!-- CLOSE ADDITIONAL TAB -->
   
+  
   <div class="tab-pane fade" id="nav-fermDetails" role="tabpanel" aria-labelledby="nav-fermDetails-tab"><!-- OPEN FERMENTATION TAB -->
             <div class="row add-top-margin"> <!-- OPEN ROW -->
                  <div class="col-md-12">
+                 
+                 
+                    <!-- *********************************** STARTER DETAILS ************************************* -->
+                              
+                           <div class="col-lg-12">
+                               <div class="custom-control custom-switch">
+                                  <input type="checkbox" class="custom-control-input slider" id="showStarterDetails">
+                                  <label class="custom-control-label" for="showStarterDetails">Batch start</label>
+                              </div>
+                          </div>
+                          
+                         
+                      <div id="starterDetails">
+                          
+                          <h3>STARTER DETAILS</h3>
+                          <p>How much honey, water, yeast, and goferm? What are the initial nutrient additions? Do I need to add enzymes?</p>
+                              
+                          <div class="row add-top-margin"> <!-- START ROW -->
+                              
+                              <div class="col-md-12">
+                                  <div class="row"><!-- START NESTED ROW -->
+                                  
+                                      <div class="col-4 col-md-2">
+                                          <div class="form-group">
+                                              <label for="targetStartingGrav">Target starting gravity</label>
+                                              <input class="form-control" data-saveTo="recipe" type="text" name="targetStartingGrav" id="targetStartingGrav">
+                                          </div>
+                                      </div>
+                                      <div class="col-4 col-md-2">
+                                          <div class="form-group">
+                                              <label for="targetFinalGrav">Target final gravity</label>
+                                              <input class="form-control" data-saveTo="recipe" type="text" name="targetFinalGrav" id="targetFinalGrav">
+                                          </div>
+                                      </div>
+                                      <div class="col-4 col-md-2">
+                                          <div class="form-group">
+                                              <label for="targetFinalAbv">Target final abv</label>
+                                              <input class="form-control" data-saveTo="recipe" type="text" name="targetFinalAbv" id="targetFinalAbv">
+                                          </div>
+                                      </div>
+                                      
+                                  </div><!-- END NESTED ROW -->
+                                  <div class="row"><!-- START NESTED ROW -->
+                                  
+                                    <div class="col-12">
+                                        <div class="form-group">
+                                          <label for="batchNotes">Start notes</label>
+                                          <textarea class="form-control" data-saveTo="batch"  id="batchNotes"></textarea>
+                                        </div>
+                                    </div>
+                                    
+                                  </div><!-- END NESTED ROW -->
+                              </div>   
+                       </div>
+                       
+                      </div>
+                       <!-- *********************************** END STARTER DETAILS ************************************* -->
+    
+                 
+                 
+                 
                  
                       <div class="row"><!-- START NESTED ROW -->
                           
@@ -562,7 +528,8 @@
             </div>
   </div><!-- CLOSE FERMENTATION TAB -->
   
-  <div class="tab-pane fade" id="nav-blendDetails" role="tabpanel" aria-labelledby="nav-blendDetails-tab"><!-- OPEN BLENDING TAB -->
+
+  <div class="tab-pane fade" id="nav-blendDetails" role="tabpanel" aria-labelledby="nav-blendDetails-tab"><!-- OPEN BLENDING/TRANSFER TAB -->
        <div class="row add-top-margin"> <!-- OPEN ROW -->
              <div class="col-md-12">
                   <div class="row justify-content-between"><!-- START NESTED ROW -->
@@ -609,14 +576,64 @@
               </div><!-- CLOSE NESTED ROW -->
          </div>
    </div><!-- CLOSE ROW -->
-  </div><!-- CLOSE BLENDING TAB -->
+  </div><!-- CLOSE BLENDING/TRANSFER TAB -->
 
+
+  <!-- OPEN PACKAGING TAB -->
+  <div class="tab-pane fade show active" id="nav-packaging" role="tabpanel" aria-labelledby="nav-packaging-tab">
+     <div class="row add-top-margin"> <!-- OPEN ROW -->
+             <div class="col-md-12">
+                  <div class="row justify-content-between"><!-- START NESTED ROW -->
+                  
+                      <div class="col-6 col-md-2">
+                          <div class="form-group">
+                              <label for="totalGallonsPackaged">Total gallons (calculated field)</label>
+                              <input class="form-control" type="number" min="0" step="0.001" name="totalGallonsPackaged" id="totalGallonsPackaged" required=""  >
+                          </div>
+                      </div>
+    
+                      <div class="col-12 col-md-8"><!-- PACKAGING TABLE -->
+                              <div class="tableHeader addBtnDiv" style="background-color:#897c79;">
+                                  <span style="padding-left:60px;">Packaging</span>
+                                  <button type="button" id="batch-btn-packaging" class="float-right btn btn-light newRow" data-saveTableTo="packaging_details">ADD</button>
+                                  <button class="float-right btn btn-light loadingBtn newRow" id="batch-btn-packaging-loading" type="button" disabled>
+                                      <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+                                      <span class="sr-only">Loading...</span>
+                                  </button>
+                              </div>
+                              
+                              <table id="batch-table-packaging"
+                              data-height="200"
+                              data-toggle="table"
+                              class="table-borderless table-sm"
+                              data-saveTableTo="packaging_details">
+                                <thead>
+                                    <tr>
+                                        <th data-field="container" class="wideCol textInput" data-sortable="true">Container</th>
+                                        <th data-field="qtyPackaged" class="narrowCol numberInput">Qty Pkg</th>
+                                        <th data-field="status" class="narrowCol textInput">Status</th>
+                                        <th data-field="packagingDate" class="narrowCol dateInput">Pkg Date</th>
+                                        <!-- Hidden columns -->
+                                        <!-- These are used for storing row data -->
+                                        <th data-field="id" data-visible="false" class="noEdit"></th>
+                                        <th data-field="batchId" data-visible="false" class="noEdit"></th>
+                                        <th data-field="created" data-visible="false" class="noEdit"></th>
+                                        <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" class="noEdit iconCol"></th>
+                                    </tr>
+                                </thead>
+                              </table>
+                        <div class="hline-bottom"></div>
+                  </div><!-- CLOSE PACKAGING TABLE -->
+                  
+              </div><!-- CLOSE NESTED ROW -->
+         </div>
+   </div><!-- CLOSE ROW -->
+  </div>
 
 
 
 
 <!-- Modal - This modal displays information from the fermentation log -->
-
 
 <div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">

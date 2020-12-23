@@ -1,16 +1,10 @@
-
-
-
 function getLossTypeList(data){
   var header = data[0];
   var lossTypeIndex = header.indexOf('LOSS TYPE');
   
-  return data
-  .map(function(val,index){if (val) {if (index > 0) {return val[lossTypeIndex];}}})
+  return data.map(function(val,index){if (val) {if (index > 0) {return val[lossTypeIndex];}}})
   .filter(function(e) {return e});
 }
-
-
 
 function log_(value) {
   SpreadsheetApp
@@ -31,12 +25,6 @@ function getTableArray(accessObject,tableName,isQuery) {
   return JSON.stringify({mainArray:conn_(clientInfo.sheets.production).setTable(tableName,isQuery).getValuesArray()});
 }
 
-
-
-function test_getNextId(){
-var response = getNextId({accessCode:'1234567',name:'Artivem Mead Co.'},'recipe');
-Logger.log(response);
-}
 /**
 * @param {object} accessObject
 * @param {string} idType
@@ -73,41 +61,110 @@ function getNextId(accessObject,idType){
            and an object from table_RECIPE_DETAILS where the column 'RECIPE ID' = 200B
 *
 * @param {object} accessObject The client's accessCode and company name
-* @param {string} table The main table to search in
-* @param {string} recordId [optional] The recordId to use
+* @para {object} options Contains options for determining what data to retreive
+    - {string} table The main table to search in
+    - {string} recordId [optional] The recordId to use
+    - {boolean} getRecipesDetails
 * @return {object}
 */
-var getPageData = function(accessObject,tableName,recordId){
+
+function test_getPageData(){
+  var accessObject = {"accessCode":"1234567","name":"Artivem Mead Co."}
+  var options = {"subTable":{"batch-table-ingredient":[{"id":47,"recipeId":"73R","ingredient":"Honey: Wildflower","qty":0.225,"uom":"gal","note":"","created":"2020-11-24T08:00:00.000Z"},{"id":48,"recipeId":"73R","ingredient":"Yeast: AW4","qty":0.05,"uom":"g","note":"","created":"2020-11-24T08:00:00.000Z"}],"batch-table-loss":[],"batch-table-ferment":[],"batch-table-blend":[]},"recordId":"96B","batch":{"id":"96B","recipeId":"73R","created":"2020-11-24T08:00:00.000Z","description":"","batchVessel":"","batchStatus":"ON HOLD","initialGallons":10,"batchStart":"","projectedFinish":"","filtered":"","porosity":"","finalAbv":"","batchFinish":"","finishedGallons":"","remainingGallons":"","og":"","alcPotential":"","stopO2":"","stopManagement":"","stopSg":"","stopAbv":"","batchNotes":"","archived":""},"recipe":{"id":"73R","created":"2020-11-24T08:00:00.000Z","shortDescription":"Strawberry, blueberry, raspberry","alcType":"MEAD","batchType":"FERM","recipeStatus":"DEVELOPING","recipeName":"","carbonated":"","gPerMl":"","startGravity":1,"endGravity":0.9,"startBrix":"","endBrix":"","abvBase":14,"abvFinal":12,"notes":"My many notes about this spectacular mead","cola":"","ttbStatus":"","formulaSubmitted":"","formulaApproved":"","labelSubmitted":"","labelApproved":"","notableDetails":"This is a very notable fruited mead","awards":"It was won MANY awards","archived":""}};
+  const clientInfo = conn_().getStoredInfo(accessObject);
+  const conn = conn_(clientInfo.sheets.production);
+  
+  
+  // START HERE
+  
+  const initGals = options.batch.initialGallons;
+  
+  // Get the values from the recipe_details table
+  const batchDetails = getSubTableRecords_(conn,'recipe_details', '73R','recipeId');
+  //Logger.log(options);
+  
+  batchDetails.forEach(function(row){
+    var newRows = {};
+    // multiply the quantities by the initial gallons to get the appropriate quantities for the new batch
+    row.qty = row.qty * initGals;
+    
+    // Add the sheet name to the object
+    newRows['sheetName'] = 'batch_details';
+    newRows['recordId'] = options.recordId;
+    newRows['inputValues'] = row;
+    
+    Logger.log(newRows);
+    createNewSheetRecord(accessObject,newRows,'row')
+  });
+  
+  
+}
+
+
+/**
+* @param {object} accessObject The client's accessCode and company name {accessCode:'',name:''}
+* @param {object} options The 
+*/
+var getPageData = function(accessObject,options){
   const output = {};
   const clientInfo = conn_().getStoredInfo(accessObject);
   const conn = conn_(clientInfo.sheets.production);
-  const primaryObject = conn.setTable(tableName).getRecordById(recordId);
+  const primaryObject = conn.setTable(options.sheetName).getRecordById(options.recordId);
   output.subTable = {};
-  output.recordId = recordId;
-  output[tableName] = primaryObject;
-  
+  output.recordId = options.recordId;
+  output[options.sheetName] = primaryObject;
   
   // The subTable keys must match the associated table id they are supposed to fill
   // EX: 
   // - <table id='batch-table-ingredient'></table>
   // - subTable['batch-table-ingredient']
-  switch (tableName) {
+  switch (options.sheetName) {
     case 'batch':
       
-      output['recipe'] = conn.setTable('recipe').getRecordById(primaryObject.recipeId);//Fills input fields not a table
-      
       // Get the sub tables
-      const splitBatchTable = separateIngredientTables_(getSubTableRecords_(conn,'batch_details',recordId,'batchId'));
-      output.subTable['batch-table-ingredient'] = splitBatchTable.ingredients;
-      output.subTable['batch-table-additive'] = splitBatchTable.additives;
-      output.subTable['batch-table-loss'] = getSubTableRecords_(conn,'loss_details',recordId,'batchId');
-      output.subTable['batch-table-ferment'] = getSubTableRecords_(conn,'ferment_details',recordId,'batchId');
-      output.subTable['batch-table-blend'] = getSubTableRecords_(conn,'blend_details',recordId,'batchId');
+      let batchDetails;
+      
+      
+      if (!options.initialGallons) { // the initialGallons key will be in the options object if it's a new batch
+      
+        batchDetails = getSubTableRecords_(conn,'batch_details',options.recordId,'batchId');
+        
+      } else {
+        // This will only happen when a new batch is created using a current recipe
+        // Get recipe details table and multiply the values by the target batch size
+        
+        const initGals = options.initialGallons;
+        
+        batchDetails = getSubTableRecords_(conn,'recipe_details', primaryObject.recipeId,'recipeId');// Get the values from the recipe_details table
+        
+        batchDetails.forEach(function(row){
+          var newRows = {};
+          // multiply the quantities by the initial gallons to get the appropriate quantities for the new batch
+          row.qty = row.qty * initGals;
+          
+          row['batchId'] = options.recordId;
+          // Add the sheet name to the object
+          newRows['sheetName'] = 'batch_details';
+          newRows['inputValues'] = row;
+          // Add new row to the batch_details sheet
+          createNewSheetRecord(accessObject,newRows,'row')
+        });
+        
+      }
+      
+      output['recipe'] = conn.setTable('recipe').getRecordById(primaryObject.recipeId);//Fills input fields - not a table
+      output.subTable['batch-table-ingredient'] = batchDetails;
+      output.subTable['batch-table-loss'] = getSubTableRecords_(conn,'loss_details',options.recordId,'batchId');
+      output.subTable['batch-table-packaging'] = getSubTableRecords_(conn,'packaging_details',options.recordId,'batchId');
+      output.subTable['batch-table-ferment'] = getSubTableRecords_(conn,'ferment_details',options.recordId,'batchId');
+      output.subTable['batch-table-blend'] = getSubTableRecords_(conn,'blend_details',options.recordId,'batchId');
+      
       break;
     case 'recipe':
-      const splitRecipeTable = separateIngredientTables_(getSubTableRecords_(conn,'recipe_details',recordId,'recipeId'));
-      output.subTable['recipe-table-ingredient'] = splitRecipeTable.ingredients;
-      output.subTable['recipe-table-additive'] = splitRecipeTable.additives;
+      // delete the commented out lines unless something breaks with the inventory table
+     // const splitRecipeTable = separateDetailsTable_(getSubTableRecords_(conn,'recipe_details',options.recordId,'recipeId'));
+      output.subTable['recipe-table-ingredient'] = getSubTableRecords_(conn,'recipe_details',options.recordId,'recipeId');//splitRecipeTable.ingredients;
+      //output.subTable['recipe-table-additive'] = splitRecipeTable.additives;
       break;
     case 'inventory':
       break;
@@ -118,7 +175,7 @@ var getPageData = function(accessObject,tableName,recordId){
     case 'schedule':
       break;
   }
-  
+  log_(output);
   return JSON.stringify(output);
 }
 
@@ -140,7 +197,7 @@ var getSubTableRecords_ = function(conn,subTableName,searchId,foreignCol) {
 * @param {array} arrayOfObjects The details table for the batch 
 * @param {object} 
 */
-var separateIngredientTables_ = function(arrayOfObjects) {
+var separateDetailsTable_ = function(arrayOfObjects) {
   var ingredients = [];
   var additives = [];
   // Loop through array
@@ -198,7 +255,11 @@ var createNewSheetRecord = function (accessObject,rowDetails,idType) {
   // Get next available record
   rowDetails.id = getNextId(accessObject,idType);
   // Create initial values for the new row
-  createNewRowObject_(rowDetails,clientInfo.settings.timezone)
+  createNewRowObject_(rowDetails,clientInfo.settings.timezone);
+  
+  
+  Logger.log('insert row');
+  Logger.log(rowDetails.initialRowValues);
   // Create new record in sheet
   conn_(clientInfo.sheets.production).setTable(rowDetails.sheetName).createRecord(rowDetails.initialRowValues);
 
@@ -222,7 +283,7 @@ var createNewRecipeAndBatchRecords = function (accessObject,initRecipeValues) {
   // Get next available record
   recipeDetails.id = getNextId(accessObject,'recipe');
   batchDetails.id = getNextId(accessObject,'batch');
-  batchDetails.inputValues = {recipeId:recipeDetails.id}; // Add recipe id to the batch. 
+  batchDetails.inputValues = {recipeId:recipeDetails.id,batchStatus:'ON HOLD'}; // Add recipe id to the batch. 
   
   // Create initial values for the new recipe row
   createNewRowObject_(recipeDetails,clientInfo.settings.timezone)
@@ -252,10 +313,10 @@ var createNewRowObject_ = function (obj,timezone) {
  
   if (btnId) { // This is for sub tables
     // Check if the object contains an ingredient table
-    if (btnId.indexOf('ingredient') > -1 || btnId.indexOf('additive') > -1 ) {
-      const type = btnId.substring(btnId.length,btnId.lastIndexOf("-")+1);
-      obj.initialRowValues.type = type; 
-    }
+//    if (btnId.indexOf('ingredient') > -1 || btnId.indexOf('additive') > -1 ) {
+//      const type = btnId.substring(btnId.length,btnId.lastIndexOf("-")+1);
+//      obj.initialRowValues.type = type; 
+//    }
     const foreignKey = btnId.substring(btnId.indexOf("-"),0) + 'Id'; // The foreign key field (eg "RECIPE ID")
     obj.initialRowValues[foreignKey] = obj.loadedRecordId;
   }

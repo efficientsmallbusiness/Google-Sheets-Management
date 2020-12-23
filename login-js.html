@@ -1,4 +1,6 @@
- $(function(){
+<script>
+
+$(function(){
    $("#indexLoader").hide();
    
     createLoginClickEvent();
@@ -40,7 +42,7 @@
       
       // Add user's data to the temporary memory
       memory_.user = response.userData;
-      getPage(response.initPage);
+      getPage(response.page);
     }
     
  

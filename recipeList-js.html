@@ -37,7 +37,6 @@ function getRecipeList(){
 */
 function getRecipeList_callback(recipeArray){
   var data = getDataFromArray_(JSON.parse(recipeArray).mainArray);
-  console.log(data);
   memory_.lists.recipeList = data;
   loadTables({table:data}); // the "table" key is the same id of the table where these values go
 }

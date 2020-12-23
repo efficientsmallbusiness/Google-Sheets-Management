@@ -46,9 +46,6 @@ var getRowsData_ = (function(main) {
     return char >= '0' && char <= '9';
   };
   
- 
-  
-  
   var createReturnObject_ = function(arr,header){
     const normalizedHeader = normalizeHeaders_(header);
     let arrayOfObjects;
@@ -63,8 +60,6 @@ var getRowsData_ = (function(main) {
       plainHeader:header
     };
   };
-  
-  
   
   var getObjects_ = function(data, keys) {
     var objects = [];

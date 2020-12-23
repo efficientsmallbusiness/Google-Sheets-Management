@@ -3,18 +3,25 @@
  // Page load
 $(function() {
  
- $('.selectpicker').selectpicker('render'); // There's an unknown issue with the select statement loading, and this fixes it
+  $('.selectpicker').selectpicker('render'); // There's an unknown issue with the select elements loading, and this fixes it
 
-    memory_.loadedRecordSheetTableName = 'batch';
-    var id = memory_.loadedRecordId;
-    if (id) {
-    // uncomment
-      getPageData_('batch',id);
-      $('#batchHeader3').append(' #'+id);
-    }
-      
-     
-     createEventHandlers(); 
+  memory_.loadedRecordSheetTableName = 'batch'; // I'm not sure I need this key in the memory_ object anymore
+    
+  var id = memory_.loadedRecordId;
+  if (id) {
+    var options = {};
+    options.sheetName = 'batch';
+    options.recordId = id;
+    options['initialGallons'] = memory_.initGallons;
+    
+    //$('#initialGallons').val(memory_.initGallons); // Update initalGallons field with the input quantity
+    memory_.initGallons = null;
+    
+    getPageData_(options);
+    $('#batchHeader3').append(' #'+id);
+  }
+    
+  createEventHandlers(); 
  })
   
   /*------------------------------------------------------------------------------------*/

@@ -295,7 +295,7 @@
           // Get the row cell with the matching index of the uom column
           var cell = rowCells[ind];
           // Insert uom from the selected drop-down menu
-          $(cell).text(uom);
+          $(cell).html(uom);
           
         };
       });
@@ -394,6 +394,11 @@
      
      row.sheetName = tableName;
      
+     // reformat the created date
+     if (row.created) {
+       row.created
+     }
+     
      // Rearrange icons
      iconDiv.css( "text-align", "left"); // Left align the icons, so they fit in the cell
      $(e.target).parent().parent().children(".saveIcon").hide(); // Hide save icon
@@ -406,6 +411,7 @@
        const tableCellElem = td.children(); // The html input/select element inside the table cell // var inputElem = el.children('input'); // If I need to explicitly select the input box from the table cell
        var newValue;
        
+       
        // Check if the cell can be edited
        if (td.hasClass('noEdit')) return;
        
@@ -413,19 +419,25 @@
          newValue = tableCellElem.children('option:selected').val(); // The select element inside the table cell
          // This implicitly removes the HTML element by replacing it with text
          td.html(newValue);
-         row[columnId] = newValue; // Update the row object
          
        } else {
          
          if (td.hasClass('dateInput')) {
            newValue = formatDateAddDay(tableCellElem.val()); // Replace the input box html with the value from the input box. 
+           
+         } else if (columnId == 'uom') {
+           newValue = td.html();
          } else {
+           
            newValue = tableCellElem.val();
          }
          td.html( tableCellElem.val() ) // Replace the input box html with the value from the input box
-         row[columnId] = newValue; // Update the row object
+         
        }
+       row[columnId] = newValue; // Update the row object
+         newValue = null;
      });
+     
      
      updateDatabase_(row,'update');
    }
@@ -519,25 +531,7 @@
             
         });
        
-       
-       /*
-       var elemId = modalElem.attr('data-ferment-modal-id');
-            var elemType = modalElem.attr('type);
-            console.log(elemType)
-            // Loop over the table row values
-            for (var key in row) {
-              var val = row[key];
-              
-               // If the row object key equals the modal's data attribute, insert the value into the input element
-               if (elemId.toString() === key.toString())
-                   if (modalElem.is( "h5" )){
-                   modalElem.text(val);
-                   } else {
-                     if (elemType == 'date') {val = formatDate(val)};
-                     modalElem.val(val);
-                   }
-             }
-             */
+      
        
        
        /** 
