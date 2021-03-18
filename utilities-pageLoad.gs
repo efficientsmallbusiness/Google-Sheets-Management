@@ -1,3 +1,4 @@
+// @ts-nocheck
 var USER_OBJECT;
 
 /*
@@ -18,6 +19,7 @@ var devurl = 'https://script.google.com/macros/s/AKfycbzI8vYN2SQaj2XeNrtVpYOWtMf
 */
 var render_ = function(page,recordId) {
   var html = HtmlService.createTemplateFromFile('index');
+  // @ts-ignore
   html.payload = {};
   html.payload.initPage = page;
   html.payload.recordId = recordId;
@@ -83,7 +85,6 @@ function include(page,isPageLoad,recordId,obj) {
 * System required function to handle initial page load
 */
 const doGet = function (e = {}){
-  //return HtmlService.createHtmlOutputFromFile('test');
   const param = e.parameter;
   USER_OBJECT = getUser_().isValid();
   // If user isn't valid, load the login page

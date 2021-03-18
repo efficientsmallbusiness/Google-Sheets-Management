@@ -31,8 +31,6 @@
     <a class="nav-item nav-link" id="nav-blendDetails-tab" data-toggle="tab" href="#nav-blendDetails" role="tab" aria-controls="nav-blendDetails" aria-selected="false">Transfer</a>
     <a class="nav-item nav-link" id="nav-packaging-tab" data-toggle="tab" href="#nav-packaging" role="tab" aria-controls="nav-packaging" aria-selected="false">Packaging</a>
     <a class="nav-item nav-link" id="nav-additional-tab" data-toggle="tab" href="#nav-additional" role="tab" aria-controls="nav-additional" aria-selected="false">Additional</a>
-    
-   
   </div>
 </nav>
 
@@ -40,7 +38,7 @@
 <div class="tab-content" id="nav-tabContent">
 
 
-<!-- OPEN GENERAL TAB 1 -->
+<!-- OPEN GENERAL TAB -->
   <div class="tab-pane fade show active" id="nav-general" role="tabpanel" aria-labelledby="nav-general-tab">
  
  
@@ -116,7 +114,7 @@
                   </div>
                   <div class="col-6 col-md-3">
                       <div class="form-group">
-                          <label for="projectedFinish">Projected finish</label>
+                          <label for="projectedFinish">Projected Packaging Date</label>
                           <input class="form-control" data-saveTo="batch" type="date" name="projectedFinish" id="projectedFinish" required=""  >
                       </div>
                   </div>
@@ -144,7 +142,6 @@
           
           
      </div><!-- END ROW -->
- 
  
  
     <div class="row add-top-margin"> <!-- Open table row -->
@@ -263,7 +260,7 @@
                 </div>
                 <div class="col-6 col-md-3">
                     <div class="form-group">
-                        <label for="batchFinish">Batch finish</label>
+                        <label for="batchFinish">Ready to Package</label>
                         <input class="form-control" data-saveTo="batch" type="date" name="batchFinish" id="batchFinish"  required="">
                     </div>
                 </div>
@@ -277,12 +274,12 @@
                 <div class="col-6 col-md-3">
                     <div class="form-group">
                         <label for="finishedGallons">Finished gallons</label>
-                        <input class="form-control" name="finishedGallons" id="finishedGallons" value="Calculated (initial -loss)" required="" disabled>
+                        <input class="form-control" name="finishedGallons" id="finishedGallons" required="">
                     </div>
                 </div>
                 <div class="col-6 col-md-5">
                     <div class="form-group">
-                        <label for="remainingGallons">Remaining gallons</label>
+                        <label for="remainingGallons">Remaining gallons (future update)</label>
                         <input class="form-control" name="remainingGallons" id="remainingGallons" value="Calculated (finished -transfers -packaging)" required="" disabled>
                     </div>
                 </div>
@@ -580,15 +577,15 @@
 
 
   <!-- OPEN PACKAGING TAB -->
-  <div class="tab-pane fade show active" id="nav-packaging" role="tabpanel" aria-labelledby="nav-packaging-tab">
+  <div class="tab-pane fade" id="nav-packaging" role="tabpanel" aria-labelledby="nav-packaging-tab">
      <div class="row add-top-margin"> <!-- OPEN ROW -->
              <div class="col-md-12">
                   <div class="row justify-content-between"><!-- START NESTED ROW -->
                   
                       <div class="col-6 col-md-2">
                           <div class="form-group">
-                              <label for="totalGallonsPackaged">Total gallons (calculated field)</label>
-                              <input class="form-control" type="number" min="0" step="0.001" name="totalGallonsPackaged" id="totalGallonsPackaged" required=""  >
+                            <label for="totalGallonsPackaged">Total gallons (calculated field)</label>
+                            <input class="form-control" type="number" min="0" step="0.001" name="totalGallonsPackaged" id="totalGallonsPackaged" required=""  >
                           </div>
                       </div>
     
@@ -610,8 +607,8 @@
                                 <thead>
                                     <tr>
                                         <th data-field="container" class="wideCol textInput" data-sortable="true">Container</th>
-                                        <th data-field="qtyPackaged" class="narrowCol numberInput">Qty Pkg</th>
-                                        <th data-field="status" class="narrowCol textInput">Status</th>
+                                        <th data-field="qtyPackaged" class="narrowCol numberInput">Qty</th>
+                                        <th data-field="note" class="narrowCol textInput">Note</th>
                                         <th data-field="packagingDate" class="narrowCol dateInput">Pkg Date</th>
                                         <!-- Hidden columns -->
                                         <!-- These are used for storing row data -->
@@ -833,13 +830,13 @@
                                         <input class="form-control modalInput" type="date" data-ferment-modal-id="date" name="date-modal" id="date-modal" >
                                     </div>
                                 </div>
-                                <div class="col-4 col-md-2">
+                                <div class="col-4 col-md-2" style="display:none;">
                                     <div class="form-group">
                                         <label for="id-modal">Row</label>
                                         <input class="form-control modalInput" type="text" data-ferment-modal-id="id" name="id-modal" id="id-modal" disabled>
                                     </div>
                                 </div>
-                                <div class="col-4 col-md-4">
+                                <div class="col-4 col-md-4" style="display:none;">
                                     <div class="form-group">
                                         <label for="batchId-modal">Batch id</label>
                                         <input class="form-control modalInput" type="text" data-ferment-modal-id="batchId" name="batchId-modal" id="batchId-modal" disabled>

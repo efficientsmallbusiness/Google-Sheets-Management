@@ -123,17 +123,15 @@ var getPageData = function(accessObject,options){
       
       // Get the sub tables
       let batchDetails;
+      const initGals = options.initialGallons;
       
-      
-      if (!options.initialGallons) { // the initialGallons key will be in the options object if it's a new batch
+      if (!initGals) { // the initialGallons key will be in the options object if it's a new batch
       
         batchDetails = getSubTableRecords_(conn,'batch_details',options.recordId,'batchId');
         
       } else {
         // This will only happen when a new batch is created using a current recipe
         // Get recipe details table and multiply the values by the target batch size
-        
-        const initGals = options.initialGallons;
         
         batchDetails = getSubTableRecords_(conn,'recipe_details', primaryObject.recipeId,'recipeId');// Get the values from the recipe_details table
         

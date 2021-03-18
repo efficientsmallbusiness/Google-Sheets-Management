@@ -1,4 +1,5 @@
-<script> // this tag is removed when the page is loaded
+<script>
+	// this tag is removed when the page is loaded
  
  // Page load
 $(function() {
@@ -12,10 +13,8 @@ $(function() {
     var options = {};
     options.sheetName = 'batch';
     options.recordId = id;
-    options['initialGallons'] = memory_.initGallons;
-    
-    //$('#initialGallons').val(memory_.initGallons); // Update initalGallons field with the input quantity
-    memory_.initGallons = null;
+    options['initialGallons'] = memory_.initGallons; // The initialGallons object key lets the server know if this is a new batch or not
+    memory_.initGallons = null; // clear initGallons from memory object
     
     getPageData_(options);
     $('#batchHeader3').append(' #'+id);

@@ -26,6 +26,8 @@ var processPageData =function(serverResponse){
   // Load form fields
   loadFormFields(serverObject);
   
+  batchDetailsEvents(serverObject); // Events specific to the batchDetails page
+
   if (serverObject.subTable) {
     // Load table data if available
     loadTables(serverObject.subTable);
@@ -35,7 +37,15 @@ var processPageData =function(serverResponse){
 }
 
 
-
+var batchDetailsEvents = function (serverObject) {
+  if (serverObject.recipe) {
+    if (serverObject.recipe.batchType == 'FERM') {
+      
+    }
+  }
+  console.log('batchDetails events');
+  console.log(serverObject);
+};
 
 /**
 * Fills form fields whose ids match the keys of the incoming server data
